@@ -105,8 +105,11 @@
   
     <div class="article-entry" itemprop="articleBody">
        
-  <p><a name="PUNpl"></a></p>
-<h1 id="写在前面"><a href="#写在前面" class="headerlink" title="写在前面"></a>写在前面</h1><p>本手册仅说明基于Lucene的搜索引擎的权重问题，是一篇非常硬核的文档。如果对该问题不太清楚实际上也并不会影响你使用Solr。<br /><span id="more"></span></p>
+  <meta name="referrer" content="no-referrer"/>
+<a name="PUNpl"></a>
+# 写在前面
+本手册仅说明基于Lucene的搜索引擎的权重问题，是一篇非常硬核的文档。如果对该问题不太清楚实际上也并不会影响你使用Solr。<br /><span id="more"></span>
+
 <p><a name="AHj69"></a></p>
 <h3 id="默认相似度"><a href="#默认相似度" class="headerlink" title="默认相似度"></a>默认相似度</h3><p>Solr的相关度得分是基于Similarity类的。在Solr的schema.xml中，这个类被定义为一个预设字段。Similarity是一个Java类，它根据给定查询定义了搜索结果相关度得分的计算方法。你可以选择多个Similarity类，甚至编写自己的Similarity类，但在此之前，你需要理解Solr默认的Similarity实现及其理论基础。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621778753814-4600609c-dc4e-4feb-b3a9-d2484898c8a6.png#height=357&id=T2kaI&margin=%5Bobject%20Object%5D&name=image.png&originHeight=714&originWidth=1618&originalType=binary&ratio=1&size=409711&status=done&style=none&width=809" alt="image.png"><br />默认情况下，Solr使用Lucene相应的DefaultSimilarity类。这个类使用两段式检索模型来计算相似度。首先，使用<strong>布尔模型过滤出不符合用户查询的所有文档</strong>。然后，使用<strong>向量空间模型</strong>通过<strong>计算和绘制</strong>将<strong>查询和文档转换为向量</strong>，在此基础上计算相似度得分。<strong>每个文档的相似度得分基于查询向量与文档向量的夹角余弦值</strong>。<br />在向量空间评分模型中，每个文档的<strong>词项向量</strong>经过计算后会与<strong>给定查询对应的词项向量进行比较</strong>。两者的<strong>相似度通过夹角的余弦值</strong>来表示，余弦值为1表示完美匹配；余弦值为0表示无相似性。更直观的说，两个向量越接近，则表示他们相似性越高；<strong>两向量之间的夹角越小，则余弦值越大，则表示匹配度越高</strong>。<br />当然，如果针对查询和文档的重要特征构造合理的向量来表征他们，继而进行比较，这是整个过程中最具挑战性的任务。我们来看一下DefaultSimilarity类的相关度计算公式，依次对公式中的每一部分的作用进行直观解释。<br />给定查询(q)和文档(d)，查询对应的文档相似度的得分如下：<br />$$Score(q,d)=\sum_{i\ in\ q}(tf(t\ in\ d)\ *\ t.getBoost()\ *\ norm(t,d))\ *\ coord(q,d)\ *\ queryNorm(q) $$其中：<br />$$t=词项；d=文档；q=查询；f=字段；$$<br /><strong>词频</strong>(term frequency, tf)：$$tf(t\ in\ d)=numTermOccurrencesInDocument^{1/2}$$<br /><br><br /><strong>逆文档频率</strong>(inverse document frequency, idf)：$$idf(t)=1\ +\ log(numDocs/(docFreq\ +\ 1))$$<br /><br><br /><strong>协调因子</strong>：$$coord(q,d)=numTermsInDocumentFromQuery/numTermsInQuery$$<br /><br><br /><strong>查询归一化</strong>：$$queryNorm(q)=1/(sumOfSquaredWeights^{1/2})$$<br /><br><br />$$sumOfSquaredWeights=q.getBoost()^2*\sum_{t\ in\ d}(idf(t)*t.getBoost()^2)<br>$$<br /><br><br /><strong>字段归一化</strong>：$$norm(t,d)=d.getBoost()*lengthNorm(f)*f.getBoost()$$<br /><strong>​</strong></p>
 <p><strong>词元权重</strong>(term boost, t.getBoost)<br /><strong>​</strong></p>
