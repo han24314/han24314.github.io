@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Solr手册-第一章 Solr入门 |  J`Han&#39;s Blog</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css"
+      />
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Solr手册-第一章-Solr入门"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Solr手册-第一章 Solr入门
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%B8%80%E7%AB%A0-Solr%E5%85%A5%E9%97%A8/" class="article-date">
+  <time datetime="2021-10-31T02:14:54.000Z" itemprop="datePublished">2021-10-31</time>
+</a>   
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">6.2k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">21 min</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><a name="z7b4D"></a></p>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>本手册源自《Solr in action》，并修正了部分翻译和说辞，并引入了部分自身的理解，即基于原书进行了二次整理翻译，并不持有任何版权。<br /><a target="_blank" rel="noopener" href="https://livebook.manning.com/book/solr-in-action/about-this-book/">《Solr in action》英文书籍链接(Original Book Link)</a><br /><a target="_blank" rel="noopener" href="https://www.manning.com/">《Solr in action》英文书籍版权归Manning出版社</a><br /><a target="_blank" rel="noopener" href="https://www.phei.com.cn/">《Solr in action》中文译版版权归电子工业出版社</a><br><a name="EYV54"></a></p>
+<h1 id="修整说明"><a href="#修整说明" class="headerlink" title="修整说明"></a>修整说明</h1><p>本篇文章于2021/10/31日上传GitHub，如遇版权问题请邮件<code>privatejhan@gmail.com</code>。<span id="more"></span><br><a name="XnZAq"></a></p>
+<h1 id="Chapter-One-初识Solr"><a href="#Chapter-One-初识Solr" class="headerlink" title="Chapter One 初识Solr"></a>Chapter One 初识Solr</h1><p><a name="VTKeY"></a></p>
+<h2 id="为什么需要搜索引擎"><a href="#为什么需要搜索引擎" class="headerlink" title="为什么需要搜索引擎"></a>为什么需要搜索引擎</h2><ul>
+<li><p>以文本为中心</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">搜索引擎是专门用于将文本的隐含结构抽取到索引中，进而改善搜索的。以文本为中心的数据就以为着，文档中文本包含用户所需要的信息。当然搜索引擎也支持非文本数据，例如日期时间。但是它的主要优势还是处理基于自然语言的文本数据。</span><br></pre></td></tr></table></figure></li>
+<li><p>读主导</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">文档被读取的次数远超被创建和更新的次数。同时Solr也是支持写入大量的数据，Solr4的关键特性是NRT(Near Real-Time近实时搜索)，允许每秒索引数千文档，并且几乎立刻就能搜索到它们。</span><br><span class="line">读主导数据的关键是当向其写入数据的时候，就要做好读取和重复读取无数次的准备。搜索引擎擅长执行查询数据(读操作)，而非存储数据(写操作)。如果想要搜索引擎内已有数据经常更新，那么搜索引擎可能不是最佳解决方案。</span><br></pre></td></tr></table></figure></li>
+<li><p>面向文档</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">在搜索引擎中，文档(Document d)是字段你的自包含集合，每个字段仅包含数据而不包含嵌套字段。</span><br><span class="line">Solr面向文档的平面结构方法能很好的处理各种文档格式的数据。当在处理关系型数据库中的规范化数据进行建模时候，需要对分布在多个表中的数据区规范化，将其组织成一个平面、自包含文档结构。</span><br></pre></td></tr></table></figure></li>
+<li><p>灵活的模式</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">灵活的模式表示索引的文档不必拥有统一的结构。(在关系型数据库中，表中的每一行都具有相同的结构。)</span><br></pre></td></tr></table></figure>
+<p><a name="5rM0N"></a></p>
+<h3 id="常用的搜索引擎用例"><a href="#常用的搜索引擎用例" class="headerlink" title="常用的搜索引擎用例"></a>常用的搜索引擎用例</h3><p><a name="Ny2K5"></a></p>
+<h4 id="基础关键词搜索"><a href="#基础关键词搜索" class="headerlink" title="基础关键词搜索"></a>基础关键词搜索</h4><p>一般情况下，用户想要输入几个简单的关键词之后得到不错的搜索结果，为了达到出色的用户体验，必须考虑以下几点：</p>
+<ul>
+<li>必须快速返回相关结果，大多数情况下应该在一秒之后或更短</li>
+<li>在用户拼错一些关键词时候，需要进行拼写纠错</li>
+<li>自动建议会减少击键次数，特别对移动应用而言</li>
+<li>识别查询词项的同义词</li>
+<li>匹配包含查询词项语言形式变化文档</li>
+<li>短语处理是必要的，即用户想要匹配整个短语或部分文字</li>
+<li>必须处理查询中包含的’a’、’an’、’the’等常用词(中文：的、地之类的)</li>
+<li>如果用户对排名靠前的搜索结果不满意，必须能继续查看更多结果</li>
+</ul>
+</li>
+</ul>
+<p>以上的这些功能在Solr中是开箱即用的。<br><a name="4Acye"></a></p>
+<h4 id="排名检索"><a href="#排名检索" class="headerlink" title="排名检索"></a>排名检索</h4><p>搜索引擎代表了基于查询返回’优先文档’的一种方法。搜索引擎会根据文档与查询匹配的程度为文档福分，并按照降序返回结果。匹配程度的计算取决于多个因素，一般而言，文档得分越高意味着该文档与查询的相关性越强。根据相关度对文档进行排名的重要性如下：</p>
+<ul>
+<li>现代搜索引擎通常存储大量文档，往往是百千万级乃至数十亿级。如果不根据查询相关度对文档进行排名，就会缺乏清晰的导航方式，用户将无法应对搜索结果。</li>
+<li>用户更习惯于使用那些只需要输入几个关键词就能得到结果的搜索引擎(最好能达到<code>我不说，但是你懂了</code>的地步)。在移动应用背后的搜索中，用户输入存在拼写错误的短查询，并期望其有效。</li>
+</ul>
+<p>我们可以通过特定文档、字段或指定词项赋予更高的权重或加权，可以影响文档排名。例如，通过提升时间字段的权重，可以将较新的文档提升到搜索结果的前列。<br><a name="Xu3ny"></a></p>
+<h4 id="超越关键词搜索"><a href="#超越关键词搜索" class="headerlink" title="超越关键词搜索"></a>超越关键词搜索</h4><p>搜索引擎的一个主要用例是驱动信息发现进程。通常情况下，用户并不准确知道他们要寻找什么，也不清楚搜索系统里有什么信息。一个好的搜索引擎会帮助用户明确他们的信息需求。<br />此处的核心思想是从初始查询返回文档，以及提供工具帮助用户限定搜索。即处理返回匹配的文档以外，还应告诉用户下一步该怎么做。<br><a name="DvPfN"></a></p>
+<h4 id="不要将搜索引擎用于······"><a href="#不要将搜索引擎用于······" class="headerlink" title="不要将搜索引擎用于······"></a>不要将搜索引擎用于······</h4><ul>
+<li>不适合返回大量的数据</li>
+<li>不适合进行深度分析(除非你家里有矿，内存够大)</li>
+<li>Solr<strong>无法</strong>处理文档关系</li>
+<li>不适合处理文档级别的安全策略</li>
+</ul>
+<p><a name="s915J"></a></p>
+<h2 id="Solr是个啥"><a href="#Solr是个啥" class="headerlink" title="Solr是个啥"></a>Solr是个啥</h2><ul>
+<li><p>Solr不是</p>
+<ul>
+<li>不是Google或者Bing这样的网络搜索引擎</li>
+<li>不具备网站搜索引擎优化(SEO)方面的功能</li>
+</ul>
+</li>
+<li><p>Solr具备</p>
+<ul>
+<li>强大的关键词查询</li>
+<li>拼写检查</li>
+<li>同义词处理</li>
+<li>短语查询</li>
+<li>文本分析等功能(语义变体，例如buying=&gt;purchase)</li>
+<li>地理空间查询<br><a name="o7FtN"></a><h3 id="Solr的特性"><a href="#Solr的特性" class="headerlink" title="Solr的特性"></a>Solr的特性</h3></li>
+</ul>
+</li>
+<li><p>可拓展性——Solr通过集群中多态服务器的分布式运行实现拓展</p>
+</li>
+<li><p>开箱即用——Solr是开源的，易于安装和配置，并提供预先配置好的示例服务器，方便上手</p>
+</li>
+<li><p>为搜索优化——Solr速度很快，以亚秒级速度执行复杂查询，往往只需花费几十毫秒</p>
+</li>
+<li><p>大规模文档——Solr可以用于处理包含百万级文档的索引</p>
+</li>
+<li><p>以文本为中心——Solr针对自然语言文本搜索进行优化，如电子邮件、网页、简历、PDF文档、社交消息</p>
+</li>
+<li><p>根据相关度对结构排序——Solr根据文档与用户查询的相关程度对文档进行排序，并以此顺序返回结果文档<br><a name="HfOcw"></a></p>
+<h3 id="信息检索引擎"><a href="#信息检索引擎" class="headerlink" title="信息检索引擎"></a>信息检索引擎</h3><p>Solr构建在Lucene之上，Lucene是一个广受欢迎的基于Java开发的开源信息检索库。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">信息检索(Informatiuon Retrieval，IR)是从大规模集合(通常储存在计算机)中查找满足特定信息需求的具有非结构化性质(通常是文本)的资料(通常是文档)的过程。</span><br></pre></td></tr></table></figure>
+<p>在后台，Lucene是一个Java类库，用于 <code>倒排索引</code> 的构建与管理， <code>倒排索引</code> 是专门用于匹配查询词项与文本文档的数据结构。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621690164899-947474c2-c032-4b7a-81a0-05d8fe8f0ac3.png#height=724&id=N6CsH&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1448&originWidth=1878&originalType=binary&ratio=1&size=1059619&status=done&style=none&width=939" alt="image.png"><br><a name="GpGFZ"></a></p>
+<h3 id="灵活的模式管理"><a href="#灵活的模式管理" class="headerlink" title="灵活的模式管理"></a>灵活的模式管理</h3><p>Solr通过 <code>schema.xml</code> 来表示所有可能的字段和数据类型，并将文档映射为Lucene索引。(注：在Solr5及往后，Solr默认使用managed-schema，可通过SchemaAPI动态修改模式，区别于直接编辑文件来修改模式的shema.xml。但两者作用是相同的)<br />Solr还对Lucene核心索引功能进行了拓展，拓展了<strong>复制字段</strong>(copy field)和<strong>动态字段</strong>(dynamic field)。<strong>复制字段</strong>取得了一个字段或多个字段你的原始文本内容，并将其赋予不同的字段。<strong>动态字段</strong>允许将同一字段类型赋予多个不同字段，而不需要在schema.xml中显示声明。这种特性对那些具有多个字段的文档建模非常有用。<br><a name="zCe9M"></a></p>
+<h2 id="Java-Web应用"><a href="#Java-Web应用" class="headerlink" title="Java Web应用"></a>Java Web应用</h2><p>Solr是一个Java Web应用，可以运行在任何主流Java Servlet引擎中。下图为Solr4的主要构成。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621690257125-4c7b6cff-bc29-4c25-a914-d90ac00cd78f.png#height=739&id=MmgnP&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1478&originWidth=1876&originalType=binary&ratio=1&size=1212150&status=done&style=none&width=938" alt="image.png"><br><a name="fO8fj"></a></p>
+<h3 id="一台服务器上的多个索引"><a href="#一台服务器上的多个索引" class="headerlink" title="一台服务器上的多个索引"></a>一台服务器上的多个索引</h3><p>现在应用架构的一个标志是应对快速变化要求的灵活性需求。Solr支持在单个引擎上运行多个内核。如图1.3中将多个内核处理成单独的层，全部运行在同一个Java Web应用环境下。<br />每个内核可视为单独的索引和配置，并且一个Solr示例可以包含多个内核。这样就可以在一套服务器上管理多个内核，共享服务器资源和管理任务。<br />Solr支持多核的一个用户是数据分区，例如，一个内核处理最近的文档，另一个处理较久远的文档，这就是所谓的时间顺序分片(chronological sharding)。多核的另一个用途是支持多租户应用。<br><a name="0Ci9j"></a></p>
+<h3 id="可拓展性-插件"><a href="#可拓展性-插件" class="headerlink" title="可拓展性(插件)"></a>可拓展性(插件)</h3><p>在图1.3中描述了Solr的三个主要子系统：文档管理、查询处理和文本分析。每个子系统都是由模块化的”管道”构成的，通过插件方式实现新功能。这意味着，只需要在已有管道中接入新的搜索构建即可，这使得Solr的核心功能易于拓展，并能根据特有应用需求实现定制。<br><a name="t4O5z"></a></p>
+<h3 id="可伸缩性"><a href="#可伸缩性" class="headerlink" title="可伸缩性"></a>可伸缩性</h3><p>Lucene是一个知心高速度相当快的搜索类库，Solr继承了Lucene速度方面所有优点。但是不论Lucene多快，由于CPU的I/O限制，单台服务器终会达到来自不同用户的并发请求的处理上限。<br />实现伸缩性的第一步是：Solr提供灵活的缓存管理功能，帮助服务器重用运算量大的数据扩容。具体来说，Solr预先设置一些缓存来节省繁重的重新运算量，例如来为查询过滤器缓存搜索结果。<br />缓存能做的事情只有这些，如果需要处理更多的文档和复杂的查询，可以通过增加服务器实现扩容。我们关注Solr伸缩性的两个最常见维度：<strong>查询吞吐量</strong>和<strong>文档索引量</strong>。<strong>查询吞吐量</strong>是指搜索引擎每秒支持的查询数量。虽然Lucene可以快速执行每个查询，但单台服务器上的并发请求存在瓶颈。这意味着，如果在三台服务器上复制索引，每秒的查询数量会变成原来的三倍，因为每台服务器只用处理三分之一的查询请求。在实际运用中，完美的线性伸缩性很难实现，因此，增加到三台服务器可能只会比一台服务器时增加2.5倍。<br />伸缩性的另一个维度是<strong>文档索引量</strong>。如果数量规模较大，那么单个实例会因容纳太多文档而达到极限，查询性能也会受到影响。为了处理更多文档，可以将索引拆分为很小的索引块，称之为索引分片，然后在索引分片中进行<strong>分布式搜索</strong>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">使用虚拟化拓展规模</span><br><span class="line">	现代计算的一个发展趋势是软件架构的建设能够使用个虚拟化商用硬件进行横向扩展。通过添加更多的商用硬件进行横向拓展。通过添加更多的商用服务器来处理更多的流量。云计算提供商，如Amazon的EC2，助力了这一趋势的发展。Solr的确可以运行在虚拟化硬件上，不过你应该清楚搜索是I/O和内存密集型应用。因此，如果搜索性能对你的组织而言是重中之重，那么就应该考虑在高性能磁盘(如固态硬盘SSD就非常理想)的高端硬件上部署Solr。</span><br></pre></td></tr></table></figure>
+<p><a name="rj3pC"></a></p>
+<h3 id="容错性"><a href="#容错性" class="headerlink" title="容错性"></a>容错性</h3><p>在虚拟机或商用硬件上部署Solr时候，最起码必须有一套故障应对办法。即使是最好的架构和最高端的硬件也会出故障。<br />假设索引有四个分片，托管分片二的服务器断电了。这时候，Solr无法继续索引文档和提供查询服务，搜索引擎基本就宕机了。为了避免这种情况，需要为每个分片添加副本。当分片二发生故障时候，Solr可以一用副本来索引和处理查询，Solr几圈能够保持联机状态。这种情况下故障虽然不会影响索引和查询，但由于少了一个处理请求的服务器，可能会降低速度。<br />Solr拥有先进的、精心设计的架构来满足可伸缩性和容错性。<br><a name="ep2zy"></a></p>
+<h2 id="为什么选择Solr"><a href="#为什么选择Solr" class="headerlink" title="为什么选择Solr"></a>为什么选择Solr</h2><p><a name="avmLc"></a></p>
+<h3 id="面向软件架构师的Solr"><a href="#面向软件架构师的Solr" class="headerlink" title="面向软件架构师的Solr"></a>面向软件架构师的Solr</h3><p>软件架构师评估一项新技术时，必须考虑许多因素，包括稳定性、可伸缩性和容错性。Solr在这三方面你是遥遥领先的。<br />在<strong>稳定性</strong>方面，Solr是一项成熟的技术，得到活跃的社区和经验丰富的开发者的支持。从开源代码的主工作目录直接部署，无需等待正式版本发布。<br />在<strong>可伸缩性</strong>与<strong>容错性</strong>方面，在<strong>Solr4</strong>中，分片与复制功能被改进了，更加强健和易于管理。新的扩展方式成为SolrCloud。SolrCloud后台使用Apache的ZooKeeper处理Solr服务器集群的分布式配置，并跟踪集群的状态。<strong>SolrCloud</strong>的一些<strong>新功能点</strong>如下：</p>
+<ul>
+<li>集中配置</li>
+<li>无单点故障(Single Point of Failure，SPoF)的分布式索引</li>
+<li>故障会自动转移到新的分片代表(sharp leader)</li>
+<li>查询可以发送至集群中的任意一个节点，触发跨所有分片的完整的分布式搜索，内置了故障转移和负载均衡支持功能</li>
+</ul>
+</li>
+</ul>
+<p>但是这并不意味着Solr的伸缩性没有改进空间。当修改索引大小(合并或分割索引)时，SolrCloud已然需要人工介入。并不是所有的Solr功能都适用于分布式模式。<br><a name="rY8uH"></a></p>
+<h3 id="面向系统管理员的Solr"><a href="#面向系统管理员的Solr" class="headerlink" title="面向系统管理员的Solr"></a>面向系统管理员的Solr</h3><p>作为系统管理员，采用像Solr这样的新技术时，需要优先考虑新技术是否适合现有的基础架构。简单的答案是：Solr当然适合。因为Solr是基于Java的，可以运行在任何具有J2SE 6.x/7.x JVM的操作系统平台上。Solr内置了一个由Oracle提供的开源Java Servlet引擎Jetty。另外，Solr是标准的Java Web应用，很容易部署在Java Web应用服务器中，如JBoss或Tomcat之类的。<br />Solr的所有访问都要通过Http，支持Http缓存反向代理Squid和Varnish。Solr还支持JMX，能够挂在监控应用，如Nagios。<br />另外，Solr还提供一个很不错的管理控制台，检查配置设定、查看统计数据、提交测试查询和监控SolrCloud的健康状况。<br><a name="XGlMw"></a></p>
+<h3 id="面向CEO的Solr"><a href="#面向CEO的Solr" class="headerlink" title="面向CEO的Solr"></a>面向CEO的Solr</h3><ul>
+<li><p>高管想要知道当今投资一项技术的长期回报。你可以强调许多公司仍在运行2009年发布的Solr1.4，这意味着Solr是成功的，并且在不断完善。</p>
+</li>
+<li><p>CEO们喜欢可预见的技术。</p>
+</li>
+<li><p>Solr拥有庞大的社区支持。</p>
+</li>
+<li><p>Solr入门不需要太多初始投资。无论环境的大小和规模如何，我们都有信息保证你在几分钟之内就启动一个Solr服务器，并快速索引文档。运行在云中的一台普通服务器能够处理百万级数量的文档，以亚秒级速度响应众多查询请求。<br><a name="5HuqZ"></a></p>
+<h2 id="Solr功能概述"><a href="#Solr功能概述" class="headerlink" title="Solr功能概述"></a>Solr功能概述</h2><p><a name="rM2tG"></a></p>
+<h3 id="用户体验功能"><a href="#用户体验功能" class="headerlink" title="用户体验功能"></a>用户体验功能</h3><p>Solr提供一些重要功能，使得搜索解决方案简单易用、直观且功能强大。应该注意一点，Solr只提供类REST的HttpAPI，不为其他编程语言或框架提供搜索相应的UI组件。你可以借鉴一下的用户体验功能，自己动手开发一些搜索UI组件：</p>
+</li>
+<li><p>分页与排序</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Solr支持分页请求，不用一次性返回所有匹配的文档，第一页只返回前N个文档，如果用户在第一页没有找到想要的，可以使用简单的API请求参数请求后续的页面。</span><br><span class="line">分页有两个重要作用：(1)更迅速的返回结果，因为每个请求只返回了整个搜索结果的一小部分；(2)有助于跟踪哪些查询产生了多个页面请求，这可能会为相关度评分问题提供参考。</span><br></pre></td></tr></table></figure></li>
+<li><p>分面</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">分面对搜索结果进行归类分组，帮助用户界定查询条件和发现更多信息。在房产地例子中，基础关键词搜索结果被归类到功能配套、家居风格、房屋类型等三个分面中。</span><br></pre></td></tr></table></figure></li>
+<li><p>自动建议</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">大多数用户户期望搜索应用&#x27;做正确的事&#x27;，即便自己只提供了不完整的信息。自动建议能够为用户提供一个建议列表，包含基于索引文档的词项和短语。Solr的自动建议功能是在用户开始输入几个字符时，根据输入情况显示一个建议查询列表。自动建议能够减少错误查询的数量，特别是在许多用户使用移动设备的小键盘进行搜索的情况下。</span><br></pre></td></tr></table></figure></li>
+<li><p>拼写检查</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">在移动设备满天下且人们都忙忙碌碌的年代，拼写纠错的支持必不可少。再次强调，用户期望搜索引擎妥善处理拼写错误。Solr的拼写检查支持一下两种基本模式：</span><br><span class="line"> 1、自动更正——如果索引中存在拼写错误的词项，Solr会自动进行更正；</span><br><span class="line"> 2、你要找的是不是——Solr给出的建议查询可能会找到更好的结果，因此当用户输入hilands时候给出一条提示，例如&#x27;你要找的是不是highlands&#x27;。</span><br></pre></td></tr></table></figure></li>
+<li><p>搜索结果高亮</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">当搜索大量文本文档时候，可以使用Solr的搜索结果高亮功能显示出结果文档的特定部分。搜索结果高亮越长的文档效果越好。对与用户查询匹配的搜索结果的特定部分进行高亮显示，有助于用户找到相关文档。特定的文本部分基于查询相似度动态生成。</span><br></pre></td></tr></table></figure></li>
+<li><p>地理空间搜索</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">地理位置是Solr4的高级功能，内置了经度值和纬度值的索引支持，并根据位置距离对文档排序。Solr可以根据地理位置(经度和维度)对文档进行查找和排序。在房地产例子中，搜索匹配的结果显示在一张交互地图上。用户使用地理空间搜索，通过将地图方法和缩小、移动地图中心点来找到附近的房屋。</span><br><span class="line"> Solr4另一个令人兴奋的附加功能是支持地理形状的索引，用以寻找位置相交的地理区域。居民区用精确的地理位置来表征，有助于寻找特定居民区的房源。</span><br></pre></td></tr></table></figure>
+<p><a name="dJ9Zf"></a></p>
+<h3 id="数据建模功能"><a href="#数据建模功能" class="headerlink" title="数据建模功能"></a>数据建模功能</h3><p>搜索的数据建模功能具体如下：</p>
+</li>
+<li><p>结果分组/字段折叠</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">虽然Solr要求平面、非规范化文档，但我们可以根据文档的共同属性将多个文档归为一组。结果分组，也称字段折叠，返回的结果也是成组的，而不是单个文档。</span><br><span class="line"> 字段折叠的典型例子是线程化的电子邮件讨论。根据特定的查询，邮件会在发起对话的第一个邮件消息下面被分组。</span><br></pre></td></tr></table></figure></li>
+<li><p>灵活的查询支持</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">Solr提供许多强大的查询功能，包括:</span><br><span class="line"> -&#x27;与(AND)&#x27;,&#x27;或(OR)&#x27;,&#x27;非(NOT)&#x27;条件逻辑</span><br><span class="line"> -通配符匹配</span><br><span class="line"> -支持日期到数字的区间查询</span><br><span class="line"> -支持词项间隔距离的短句查询</span><br><span class="line"> -模糊字符串匹配</span><br><span class="line"> -正则表达式匹配</span><br><span class="line"> -函数查询</span><br></pre></td></tr></table></figure></li>
+<li><p>连接</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Sql的连接(Join)使用两个及以上的表之间的共同属性(如外键)来抽取数据，从而创建关系，Solr的连接更像是Sql的子查询，不用连接其他文档的数据来创建文档。Solr的连接返回符合搜索条件的子文档。使用单一响应返回一个推文的所有转发，这是Solr的一种连接应用。</span><br></pre></td></tr></table></figure></li>
+<li><p>文档聚类</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">文档聚类根据代表每个文档的词项，将相似的文档分在一组。聚类有助于避免搜索结果中返回很多包含相同信息的文档。例如，要从多个RSS供稿中获取新闻文章的搜索引擎，很有可能得到同一条新闻的多个文档。我们可以通过聚类挑选一条具有代表性的文章，而不是返回同一条新闻的多个文档。</span><br></pre></td></tr></table></figure></li>
+<li><p>导入各种文档格式，例如PDF和Word</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">某些情况下需要对PDF或Word等常见格式的大量文档进行搜索。对Solr来说这很容易做到，因为它继承了Apache的Tika项目，而Tika支持大多数流行的文档格式。</span><br></pre></td></tr></table></figure></li>
+<li><p>从关系型数据库导入数据</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">要用Solr搜索关系型数据库中的数据，通过配置Solr使用Sql查询生成文档。</span><br></pre></td></tr></table></figure></li>
+<li><p>多语种支持</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Solr与Lucene有很长的多语种处理历史。Solr内置语种检测，并提供多语种的特定文本分析解决方案。</span><br></pre></td></tr></table></figure>
+<p><a name="uhcIy"></a></p>
+<h3 id="Solr4的新功能"><a href="#Solr4的新功能" class="headerlink" title="Solr4的新功能"></a>Solr4的新功能</h3></li>
+<li><p>近实时搜索</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Solr的近实时搜索功能实现了文档添加到索引后的几秒钟之内，就能很快被搜素到。借助近实时搜索，Solr可以搜索快速变化的内容源，如最新报道和社交网络。</span><br></pre></td></tr></table></figure></li>
+<li><p>原子更新与乐观并发</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">原子更新功能允许客户端应用在已有文档上添加、更新、删除和对字段增值，而且无须重新发送整个文档。例如在之前房地产应用中，房屋价格变化了，只需要向Solr发送一次专门更改加个字段的原子更新即可。</span><br><span class="line"> Solr使用了乐观并发机制提防不兼容的更新。简单来说，Solr使用特殊的`_version_`版本字段来确保文档的安全更新语义。对于两个用户同时更改同一个文档的情况，后提交更改的用户将会获得一个过时的版本字段，所以将会更新失败。</span><br></pre></td></tr></table></figure></li>
+<li><p>实时Get功能</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Solr是一种NoSql技术，Solr的实时Get功能是典型的NoSql方式。无论文档是否提交到索引，你都可以使用唯一标识符检索最新版本。这与使用行键(row key)检索数据的Cassandra的`键-值`存储方式类似。</span><br><span class="line"> 在Solr4出现之前，除非文档提交到Lucene的索引，否则是检索不出来的。借助Solr4的实时Get功能，我们就不必非要提交后通过唯一的ID检索文档了。在发送给Solr之后且提交之前，实时Get功能对更新已有文档非常有用。</span><br></pre></td></tr></table></figure></li>
+<li><p>使用事务日志实现写持续性</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">当文档发送到Solr进行索引时，会被写入事务日志中，以防止服务器发生故障造成数据丢失。Solr的事务日志处在客户端应用与Lucene索引之间，也对实时Get请求起作用，无论是否已经提交给Lucene，都可以通过唯一标识符检索到文档。</span><br><span class="line"> Solr的事务日志解除了更新可见性与更新持久性的绑定。也就是说，文档可以持久存储，但不出现在搜索结果中。事务日志可以控制提交的文档在搜索结果中出现的时机，避免在提交之前服务器出故障的时候丢失数据。</span><br></pre></td></tr></table></figure></li>
+<li><p>使用Zookeeper实现建议分片和复制</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">SolrCloud让扩容变得简单和自动化，因为Solr使用Apache的Zookeeper对分片代表和副本进行配置管理。</span><br><span class="line"> 在Solr中，Zookeeper负责制定分片代表(主机)和分片副本(从机)，并对服务请求可用的服务器进行跟踪。SolrCloud与Zookeeper是捆绑的，因此SolrCloud的启动无须做任何额外的配置和安装。</span><br></pre></td></tr></table></figure></li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>Copyright： </strong>
+          
+          Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%B8%80%E7%AB%A0-Solr%E5%85%A5%E9%97%A8/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr/" rel="tag">Solr</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr%E5%9F%BA%E7%A1%80/" rel="tag">Solr基础</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%BA%8C%E7%AB%A0-Solr%E4%B8%8A%E6%89%8B/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Solr手册-第二章 Solr上手
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/10/31/Solr%E6%9D%83%E9%87%8D%E5%9B%A0%E5%AD%90%E8%A7%A3%E6%9E%90/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Solr权重因子解析</div>
+      </a>
+    
+  </nav>
+
+  
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> John Doe
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="J`Han&#39;s Blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">HomePage</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">Document</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/Solr/">Solr</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/">Tags</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>如果觉得对您有帮助，来个打赏吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

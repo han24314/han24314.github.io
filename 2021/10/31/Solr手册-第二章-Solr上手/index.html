@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Solr手册-第二章 Solr上手 |  J`Han&#39;s Blog</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css"
+      />
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Solr手册-第二章-Solr上手"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Solr手册-第二章 Solr上手
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%BA%8C%E7%AB%A0-Solr%E4%B8%8A%E6%89%8B/" class="article-date">
+  <time datetime="2021-10-31T02:16:16.000Z" itemprop="datePublished">2021-10-31</time>
+</a>   
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">2.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">10 min</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><a name="z7b4D"></a></p>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>本手册源自《Solr in action》，并修正了部分翻译和说辞，并引入了部分自身的理解，即基于原书进行了二次整理翻译，并不持有任何版权。<br /><a target="_blank" rel="noopener" href="https://livebook.manning.com/book/solr-in-action/about-this-book/">《Solr in action》英文书籍链接(Original Book Link)</a><br /><a target="_blank" rel="noopener" href="https://www.manning.com/">《Solr in action》英文书籍版权归Manning出版社</a><br /><a target="_blank" rel="noopener" href="https://www.phei.com.cn/">《Solr in action》中文译版版权归电子工业出版社</a><br><a name="EYV54"></a></p>
+<h1 id="修整说明"><a href="#修整说明" class="headerlink" title="修整说明"></a>修整说明</h1><p>本篇文章于2021/10/31日上传GitHub，如遇版权问题请邮件<code>privatejhan@gmail.com</code>。<span id="more"></span><br><a name="QqWON"></a></p>
+<h1 id="Chapter-Two-Solr上手"><a href="#Chapter-Two-Solr上手" class="headerlink" title="Chapter Two Solr上手"></a>Chapter Two Solr上手</h1><p><a name="VAyyB"></a></p>
+<h2 id="开始上手"><a href="#开始上手" class="headerlink" title="开始上手"></a>开始上手</h2><p>以安装Solr4.7为例，需要先在Apache官方下载Solr 4.7的压缩包(.tar/.tgz)，且需要安装Java 1.6及以上的版本。<br />下载Solr 4.7的压缩包之后，直接解压之后即可使用。后文将把Solr解压后的安装位置统一称之为 <code>$SOLR_INSTALL/</code> 。<br><a name="moyh3"></a></p>
+<h3 id="启动Solr的示例服务器"><a href="#启动Solr的示例服务器" class="headerlink" title="启动Solr的示例服务器"></a>启动Solr的示例服务器</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd $SOLR_INSTALL/</span><br><span class="line">java -jar start.jar</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">注：</span><br><span class="line">	在Solr 6系列，Solr示例服务器启动命令有所变化，启动命令如下(具体可翻阅官方文档)：</span><br><span class="line">  cd $SOLR_INSTALL/</span><br><span class="line">  bin\solr.cmd start -e techproducts (unix系列操作系统)</span><br><span class="line">  bin/solr start techproducts</span><br></pre></td></tr></table></figure>
+<p>在初始化过程中，控制台会显示一些日志消息。如果一切顺利，在日志底部地方会显示如下消息：<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621746779246-30f70f3f-b1ea-4ce0-9dbe-aeaeb264f414.png#height=60&id=WnnTT&margin=%5Bobject%20Object%5D&name=image.png&originHeight=120&originWidth=1860&originalType=binary&ratio=1&size=76581&status=done&style=none&width=930" alt="image.png"><br />启动成功之后，则可以通过 <code>http://loclahost:8983/solr</code> 进行可视化界面的访问。<br />实质上，在后台，start.jar启动了一个名为Jetty的Java Web服务器，监听端口为8983(Solr默认端口)。Solr是运行在Jetty上的Web应用程序。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621746802892-c47a8100-e1bf-4c0c-883d-20a3ffbf28ba.png#height=829&id=oBeyb&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1658&originWidth=1874&originalType=binary&ratio=1&size=1030393&status=done&style=none&width=937" alt="image.png"><br><a name="kJCM4"></a></p>
+<h3 id="故障排除"><a href="#故障排除" class="headerlink" title="故障排除"></a>故障排除</h3><p>实质上，启动示例服务器应该不会出现太多错误。服务器没有正常启动的最常见原因是默认端口8983已经被其他进程占用。如果出现这种情况，你会看到类似 <code>java.net.Bind -Exception:Address already in use</code> 的错误提示。通过改变Solr的绑定端口可以很容易的解决这个问题。命令 <code>java -Djetty.port=8080 -jar start.jar</code> 为Jetty指定一个不同的端口。使用此命令后，Jetty将有原先的8983端口改为8080端口。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621747233304-3508c98e-5e60-47a8-880a-ef678b34a836.png#height=544&id=bwHIB&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1088&originWidth=1836&originalType=binary&ratio=1&size=806437&status=done&style=none&width=918" alt="image.png"></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Jetty vs. Tomcat</span><br><span class="line"> 	建议初次学习Solr时使用Jetty服务器。如果你所在的组织使用Tomcat或者其他Java Web服务器(例如Resin)，可以考虑部署Solr WAR文件。</span><br><span class="line">   Solr在Jetty中的初始化安装和配置过程是非常简单的，但这并不意味着Jetty不适合作为Solr生产环境的部署。如果你的组织已经拥有一个标准的Java Web应用平台，那么Solr在该平台运行没有问题。如果你可以选择应用平台，建议使用Jetty。Jetty速度快、稳定、成熟，并且易于管理和定制。Google在其APP Engine上使用Jetty，这一事实表明，将Solr运行在Jetty上，即使在最苛刻的环境下，Jetty可靠的平台表现同样会令人充满信心。</span><br></pre></td></tr></table></figure>
+<p><a name="mscS6"></a></p>
+<h3 id="停止Solr"><a href="#停止Solr" class="headerlink" title="停止Solr"></a>停止Solr</h3><p>对于本地操作，可以在启动Solr的控制台窗口按Ctrl+C组合键来停止Solr服务器。通常来说，这种方式对于开发和测试而言已经足够安全。而Jetty的确也提供一种更安全的服务器停止机制。<br><a name="SqhVe"></a></p>
+<h3 id="了解Solr主目录"><a href="#了解Solr主目录" class="headerlink" title="了解Solr主目录"></a>了解Solr主目录</h3><p>Solr的内核由配置文件、Lucene索引文件和Solr事务日志组成。Jetty上运行的一台Solr服务器可以控制多个内核。<br />在单个服务器的语境下Solr使用内核(core)，在分布式语境下Solr使用集合(collection)，此处主要介绍内核。<br />Solr主目录是封装了一个或者多个内核的目录结构，在以前的版本中，Solr主目录由配置文件solr.xml配置。在Solr 4.4以后，内核可以被自动发现，不再需要在solr.xml中定义了。因此，现在可以忽略示例服务器中提供的solr.xmla文件。这个文件包含的高级选项仅适用于在云模式下运行Solr。Solr同样提供了一个内核管理API，允许在应用中以编程方式创建、更新和删除内核。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621748872341-32ab75c5-306d-4cac-92ec-f416d0f40fab.png#height=809&id=dEuE2&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1618&originWidth=1852&originalType=binary&ratio=1&size=922181&status=done&style=none&width=926" alt="image.png"><br><a name="qRjqm"></a></p>
+<h3 id="对示例文档进行索引"><a href="#对示例文档进行索引" class="headerlink" title="对示例文档进行索引"></a>对示例文档进行索引</h3><p>第一次启动Solr，索引中并没有文档。也就是说，这是一台空服务器，等待数据填充以供搜索使用。<br />输入以下命令:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd $SOLR_INSTALL/example/exampledocs</span><br><span class="line">java -jar post.jar *.xml</span><br></pre></td></tr></table></figure>
+<p>应该会看到类似下面的输出：<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621749012774-72866175-d5a9-4053-b048-5e238910c10b.png#height=403&id=np4nG&margin=%5Bobject%20Object%5D&name=image.png&originHeight=806&originWidth=1642&originalType=binary&ratio=1&size=446948&status=done&style=none&width=821" alt="image.png"><br />post.jar文件通过Http Post方法吧XML文档发送至Solr。在所有文档被发送至Solr后，post.jar会发起一个提交，确保实例文档在Solr中可被搜索到。<br />在Solr管理控制台中前往查询页面(<a target="_blank" rel="noopener" href="http://localhost:8983/solr)%EF%BC%8C%E6%89%A7%E8%A1%8C%E6%9F%A5%E6%89%BE%E6%89%80%E6%9C%89%E6%96%87%E6%A1%A3%E7%9A%84%E6%9F%A5%E8%AF%A2(q=*:*)%EF%BC%8C%E5%B7%B2%E7%A1%AE%E8%AE%A4%E5%AE%9E%E4%BE%8B%E6%96%87%E6%A1%A3%E6%98%AF%E5%90%A6%E5%B7%B2%E7%BB%8F%E6%B7%BB%E5%8A%A0%E6%88%90%E5%8A%9F%E3%80%82">http://localhost:8983/solr)，执行查找所有文档的查询(q=*:*)，已确认实例文档是否已经添加成功。</a><br><a name="H7vHY"></a></p>
+<h2 id="一切都关乎搜索"><a href="#一切都关乎搜索" class="headerlink" title="一切都关乎搜索"></a>一切都关乎搜索</h2><p><a name="Noz5P"></a></p>
+<h3 id="Solr查询表单详解"><a href="#Solr查询表单详解" class="headerlink" title="Solr查询表单详解"></a>Solr查询表单详解</h3><p>所有和Solr核心服务有关的交互，都是通过Http请求执行的。以下为Solr搜索表单的参数说明：<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621749894961-4839bcc4-c6da-487c-9b78-f9b401f81284.png#height=833&id=t4wk3&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1666&originWidth=1798&originalType=binary&ratio=1&size=869069&status=done&style=none&width=899" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621749923765-794b6caa-81b2-4c8c-ada8-06619a4c479d.png#height=341&id=Jhd2x&margin=%5Bobject%20Object%5D&name=image.png&originHeight=682&originWidth=1694&originalType=binary&ratio=1&size=606820&status=done&style=none&width=847" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621749942752-b8e44131-e423-4d40-a0dc-23293a9d549c.png#height=264&id=H6TNe&margin=%5Bobject%20Object%5D&name=image.png&originHeight=528&originWidth=1642&originalType=binary&ratio=1&size=379878&status=done&style=none&width=821" alt="image.png"><br /><br><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621749968482-b6df11f7-7a17-484c-9040-f05edecb0bce.png#height=328&id=DdDoR&margin=%5Bobject%20Object%5D&name=image.png&originHeight=656&originWidth=1872&originalType=binary&ratio=1&size=586866&status=done&style=none&width=936" alt="image.png"><br />查询表单并不是为最终用户设计的，而是Solr为开发者和管理员提供的一个查询提交途径，让他们无须手动构造Http请求或专门开发一个客户端程序，就能向Solr发送查询请求。但是有一点必须要澄清，使用Solr的应用程序，你需要为其开发用户搜索界面。不过，Solr提供了一个名为Solritas的可定制搜索界面样例，帮助你构建优秀的搜索应用。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Solr官方提供的帮助路径:$SOLR_INSTALL/docs/tutorial.html</span><br><span class="line">solr 6系列路径:$SOLR_INSTALL/docs/quickstart.html</span><br></pre></td></tr></table></figure>
+<p><a name="yfMPa"></a></p>
+<h3 id="Solr的搜索返回机制"><a href="#Solr的搜索返回机制" class="headerlink" title="Solr的搜索返回机制"></a>Solr的搜索返回机制</h3><p>Solr会返回原始的结果数据，并提供核心的搜索功能，要为用户提供优质的搜索体验，则需要根据这些结果和功能进行自主设计与开发。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621750339320-a8cef810-d133-46b8-b616-6180c8c4a7f9.png#height=754&id=wctzS&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1508&originWidth=1848&originalType=binary&ratio=1&size=935386&status=done&style=none&width=924" alt="image.png"><br />此处我们只介绍了Solr使用XML格式返回搜索结果，其实Solr也支持其他格式，例如CSV(Comma-Separated Values，逗号分割值)、JSON(JavaScript Object Notation)，以及针对主流编程语言的特定格式。例如，Solr可以返回Python专用格式，它允许使用eval函数将响应结果正确的解析为一个Python对象树。<br><a name="pVKXT"></a></p>
+<h3 id="排名检索"><a href="#排名检索" class="headerlink" title="排名检索"></a>排名检索</h3><p>Solr的查询处理与关系型数据库或其他NoSql数据存储最大的不同就在于排名检索：根据问的那个与查询的相关性进行排序，最相关的文档将处于列表的最前端。<br />例如：首先在文本搜索框 <code>q</code> 中输入 <code>iPod</code> ，在 <code>fl</code> 字段填入 <code>name、feature、score</code> 三个字段，然后执行搜索，应该会返回三个文档，根据 <code>score</code> 降序排列。<br />从直观上来说，这个排序是可行的。因为iPod这个查询关键词在第一个文档中出现了三次，在name字段出现了两次，在features字段出现了一次。它仅在其他文档中出现了一次。在score字段的的分数值并非具有绝对意义，他在Lucene内部仅用作相对排名，而且同一文档在不同查询中的得分并无关系。也就是说，<strong>与查询匹配的文档相关度得分仅适用于该查询</strong>。返回的搜索结果按照得分由<strong>高到低排序，文档的分越高，说明该查询越相关</strong>。<br />现在将查询语句修改为 <code>iPod power^2</code> ，<strong>这里给power赋予boost值2</strong>，而iPod的boost值仍为1。这表示在这个查询语句中power的重要性是iPod的两倍。这次依然返回了相同的三个文档，但排序发生了变化。因为在这个查询语句中power的重要性是iPod的两倍，而Belkin Mobile Power Cord for iPod w/ Dock的name和feature两个字段包含了power，所以他成为了第一条搜索结果。<br><a name="BuOLi"></a></p>
+<h3 id="分页和排序"><a href="#分页和排序" class="headerlink" title="分页和排序"></a>分页和排序</h3><p><a name="RBQBd"></a></p>
+<h4 id="分页"><a href="#分页" class="headerlink" title="分页"></a>分页</h4><p>分页是Solr查询处理中最重要的功能之一，每一次查询包含了控制页面大小(行数)和起始位置的参数。如果查询请求未做指定，Solr默认的页面大小为10(页面包含的搜索结果个数)，也可以在查询请求中通过指定行参数来调整页面大小。要在搜索结果中请求下一页，只需要在页面大小中增量调整start参数。<br />因为底层Lucene索引并未对一次返回大量文档做出优化设计，所以尽可能使用小页面是非常重要的。相反，Lucene优化了查询处理，底层的数据结构设计用于最大限度满足文档匹配和评分。一旦搜索结果被确认后，Solr必须重建每个文档。大多数情况下，重建文档是从磁盘中读取数据，所以 它会尽可能高效的使用智能缓存。然而，相比查询执行，搜索结果的构建仍是一个缓慢的过程，这对大页面而言更是如此。因此，使用小页面，Solr会有更好的表现。<br><a name="3TQxW"></a></p>
+<h3 id="排序"><a href="#排序" class="headerlink" title="排序"></a>排序</h3><p>之前有提到搜索结果根据相关度得分将文档降序排列。Solr还可以根据文档的其他字段排序，例如价格降序。<br />当所有文档得分相同，Solr仍能以一个确定的顺序返回所有文档。这是因为Solr找到与查询相关的所有文档后，会对整个文档集合进行排序和分页。Solr分别记录了与查询匹配的所有文档的排序和分页。顺便提一下，如果所有文档的得分相同，那么它们会以索引的次序返回，该次序基于Lucene的内部文档ID。<br><a name="PRfbw"></a></p>
+<h3 id="拓展的搜索功能"><a href="#拓展的搜索功能" class="headerlink" title="拓展的搜索功能"></a>拓展的搜索功能</h3><p>查询表单包含复选框列表，可以在查询处理中实现高级功能。</p>
+<ul>
+<li>dismax——析取最大查询解析器</li>
+<li>edismax——拓展的析取最大查询解析器</li>
+<li>hl——搜索结果高亮</li>
+<li>facet——分面</li>
+<li>spatial——地理空间搜索，例如，基于位置距离排序</li>
+<li>spellcheck——查询词项拼写检查</li>
+</ul>
+<p>Solriatas的三个样例封装了许多强大的功能，建议可以花时间了解下每项功能。<br><a name="mF8yf"></a></p>
+<h2 id="Solr管理控制台一览"><a href="#Solr管理控制台一览" class="headerlink" title="Solr管理控制台一览"></a>Solr管理控制台一览</h2><p><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1621752027933-db52eba8-4c12-4a1e-9366-021afe5c5b04.png#height=473&id=Si06Y&margin=%5Bobject%20Object%5D&name=image.png&originHeight=946&originWidth=1748&originalType=binary&ratio=1&size=551735&status=done&style=none&width=874" alt="image.png"><br />以下是你需要了解的管理控制台的一些特点：</p>
+<ul>
+<li>了解如何通过仪表盘配置Solr实例；</li>
+<li>从日志中查看最近的日志信息；</li>
+<li>从日志级别上暂时变更日志的详细设置；</li>
+<li>在核心管理器中添加并管理多个内核；</li>
+<li>查看Java的系统属性；</li>
+<li>通过线程转储在Java虚拟机JVM中获取所有的活动线程。</li>
+</ul>
+<p>除了这些主要页面之外，还有一些关于服务器中每个内核的专属页面。内核专属页面允许执行以下操作：</p>
+<ul>
+<li>查看内核的具体属性，例如，主要核心页面的Lucene片段数量；</li>
+<li>向内核发送一个快速请求，使用Ping确认系统正常运行与相应；</li>
+<li>在Schema中查看该内核当前活跃的schema.xml；</li>
+<li>从内核的Config中查看当前活跃的solrconfig.xml；</li>
+<li>在Replication中查看如何将索引复制到其他服务器上；</li>
+<li>在Analysis中进行文本分析测试；</li>
+<li>通过Schema Browser确定文档待分析字段；</li>
+<li>通过Schema Browser的Local Term Info工具得到字段的热门词信息；</li>
+<li>通过PlugIns/Stats查看插件的状态与配置；</li>
+<li>查看Solr内核缓存区域的统计信息，通过PlugIns/Stats查看documentCache(文档缓存)中的文档数量；</li>
+<li>通过Dataimport管理DIH<br><a name="CXu6A"></a><h2 id="Chapter-Two-Over"><a href="#Chapter-Two-Over" class="headerlink" title="Chapter Two Over"></a>Chapter Two Over</h2></li>
+</ul>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>Copyright： </strong>
+          
+          Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%BA%8C%E7%AB%A0-Solr%E4%B8%8A%E6%89%8B/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr/" rel="tag">Solr</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr%E5%9F%BA%E7%A1%80/" rel="tag">Solr基础</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%B8%89%E7%AB%A0-Solr%E5%9F%BA%E7%A1%80%E7%90%86%E8%AE%BA/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Solr手册-第三章 Solr基础理论
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%B8%80%E7%AB%A0-Solr%E5%85%A5%E9%97%A8/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Solr手册-第一章 Solr入门</div>
+      </a>
+    
+  </nav>
+
+  
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> John Doe
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="J`Han&#39;s Blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">HomePage</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">Document</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/Solr/">Solr</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/">Tags</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>如果觉得对您有帮助，来个打赏吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>

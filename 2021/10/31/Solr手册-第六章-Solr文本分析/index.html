@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+  
+
+    <head>
+      <meta charset="utf-8" />
+        
+      <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1"
+      />
+      <title>Solr手册-第六章 Solr文本分析 |  J`Han&#39;s Blog</title>
+  <meta name="generator" content="hexo-theme-ayer">
+      
+      <link rel="shortcut icon" href="/favicon.ico" />
+       
+<link rel="stylesheet" href="/dist/main.css">
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/css/remixicon.min.css"
+      />
+      
+<link rel="stylesheet" href="/css/custom.css">
+ 
+      <script src="https://cdn.jsdelivr.net/npm/pace-js@1.0.2/pace.min.js"></script>
+       
+ 
+
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/@sweetalert2/theme-bulma@5.0.1/bulma.min.css"
+      />
+      <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+
+      <!-- mermaid -->
+      
+      <style>
+        .swal2-styled.swal2-confirm {
+          font-size: 1.6rem;
+        }
+      </style>
+    </head>
+  </html>
+</html>
+
+
+<body>
+  <div id="app">
+    
+      
+    <main class="content on">
+      <section class="outer">
+  <article
+  id="post-Solr手册-第六章-Solr文本分析"
+  class="article article-type-post"
+  itemscope
+  itemprop="blogPost"
+  data-scroll-reveal
+>
+  <div class="article-inner">
+    
+    <header class="article-header">
+       
+<h1 class="article-title sea-center" style="border-left:0" itemprop="name">
+  Solr手册-第六章 Solr文本分析
+</h1>
+ 
+
+      
+    </header>
+     
+    <div class="article-meta">
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E5%85%AD%E7%AB%A0-Solr%E6%96%87%E6%9C%AC%E5%88%86%E6%9E%90/" class="article-date">
+  <time datetime="2021-10-31T02:17:14.000Z" itemprop="datePublished">2021-10-31</time>
+</a>   
+<div class="word_count">
+    <span class="post-time">
+        <span class="post-meta-item-icon">
+            <i class="ri-quill-pen-line"></i>
+            <span class="post-meta-item-text"> Word count:</span>
+            <span class="post-count">13.9k</span>
+        </span>
+    </span>
+
+    <span class="post-time">
+        &nbsp; | &nbsp;
+        <span class="post-meta-item-icon">
+            <i class="ri-book-open-line"></i>
+            <span class="post-meta-item-text"> Reading time≈</span>
+            <span class="post-count">49 min</span>
+        </span>
+    </span>
+</div>
+ 
+    </div>
+      
+    <div class="tocbot"></div>
+
+
+
+
+  
+    <div class="article-entry" itemprop="articleBody">
+       
+  <p><a name="z7b4D"></a></p>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>本手册源自《Solr in action》，并修正了部分翻译和说辞，并引入了部分自身的理解，即基于原书进行了二次整理翻译，并不持有任何版权。<br /><a target="_blank" rel="noopener" href="https://livebook.manning.com/book/solr-in-action/about-this-book/">《Solr in action》英文书籍链接(Original Book Link)</a><br /><a target="_blank" rel="noopener" href="https://www.manning.com/">《Solr in action》英文书籍版权归Manning出版社</a><br /><a target="_blank" rel="noopener" href="https://www.phei.com.cn/">《Solr in action》中文译版版权归电子工业出版社</a><br><a name="EYV54"></a></p>
+<h1 id="修整说明"><a href="#修整说明" class="headerlink" title="修整说明"></a>修整说明</h1><p>本篇文章于2021/10/31日上传GitHub，如遇版权问题请邮件<code>privatejhan@gmail.com</code>。<span id="more"></span><br><a name="N3pon"></a></p>
+<h1 id="Chapter-Five-文本分析"><a href="#Chapter-Five-文本分析" class="headerlink" title="Chapter Five 文本分析"></a>Chapter Five 文本分析</h1><p><a name="juBAq"></a></p>
+<h3 id="本章要点："><a href="#本章要点：" class="headerlink" title="本章要点："></a>本章要点：</h3><ul>
+<li><strong>使用Solr分析表单进行测试</strong></li>
+<li><strong>为高级文本分析自定义字段类型</strong></li>
+<li><strong>通过Solr的插件框架扩展文本分析</strong></li>
+</ul>
+<p>我们在第5章已经了解了Solr索引的工作原理，并指导如何在schema.xml中定义非文本字段。本章将通过文本分析进一步了解索引过程。<br /><strong>文本分析消除了索引词项与用户搜索词项之间的语言差异</strong>，让用户在搜索 <code>buying a new house</code> 时能找到 <code>purchasing a new house</code> 这样的文档。本章介绍如何通过配置Solr，让包含house的查询与包含home的文档之间建议匹配关系。<br />如果配置恰当，文本分析就能允许用户使用自然语言进行搜索，而无需考虑搜索词项的所有可能形式。谁也不想看到用户构造出如下查询表达式： <code>buying house OR purchase home OR buying a home OR purchasing a house ...</code> 。<br />用户可以使用自然语言来搜索他们需要的信息，这是提供良好搜索体验的基础。鉴于Google和其他搜索引擎的广泛使用，用户往往会期望搜索引擎非常智能，而<strong>搜索的智能化就是从优秀的文本分析开始</strong>的！<br />文本分析目前不仅用于消除词项之间的表面差异，还用来解决更复杂的问题，例如，特定语种解析、部分词性标注与词性还原等。如果你不熟悉这些专业术语，不用担心，接下来会详细讲解。Solr包含一个文本分析可扩展框架，可以移除常见词汇(也就是停用词)，以及执行其他更复杂的文本分析任务。Solr文本分析框架提供了强大的功能与灵活的扩展性，但对初学者而言，这个框架过于复杂，令人望而却步。我们常说事物总有两面性，Solr有可能解决非常复杂的文本分析问题，但使得原本一些简单的分析任务做起来反而变麻烦了，杀鸡焉用牛刀的感觉。Solr在示例schema.xml文件中预置了许多字段类型，这样做的原因是，确保初学者在解除开箱即用的Solr时，能较简单的开始使用文本分析。学完本章，相信你有能力利用这个强大的框架来分析绝大多数内容。<br />本章主要介绍Solr的文本分析方法，帮助你思考如何为你的文档设计文本分析解决方案。为达到此目的，我们要解决一个稍微复杂的文本分析问题，以证明文本分析机制与策略是有效的。具体来说，本章将介绍Solr文本分析的一些基本组件：</p>
+<ul>
+<li><strong>Solr文本分析的基本元素，包括分析器、分词器与分词过滤链</strong></li>
+<li><strong>当索引创建与查询处理时，如何在schema.xml中为文本分析自定义字段类型</strong></li>
+<li><strong>常见的文本分析策略，例如，移除停用词、大小写转换、移除重音、同义词扩展及词干提取等</strong></li>
+</ul>
+<p>掌握了文本分析基础模块之后，我们将解决一个难度稍大的文本分析问题，借此熟悉Solr文本分析的一些高级功能。具体来说，我们将学习如何对类似Twitter的微博内容进行分析。微博带来了与以往不同的挑战，用户如何使用微博搜索，这些需要我们认真思考。微博内容的文本分析任务如下；</p>
+<ul>
+<li><p><strong>将词项中重复字符的数量减少到两个，如yummm</strong></p>
+</li>
+<li><p><strong>保留主题标签符号#与提及符号@</strong></p>
+</li>
+<li><p><strong>使用自定义分词过滤器处理诸如bit.ly这样的短网址</strong><br><a name="83wnc"></a></p>
+<h2 id="微博文本分析"><a href="#微博文本分析" class="headerlink" title="微博文本分析"></a>微博文本分析</h2><p>这里以第5张的微博搜索应用为例。简而言之，我们需要设计与实现一个大众社交媒体网站(如Twitter)的微博内容搜索解决方案。因为本章聚焦文本分析，所以需要进一步了解微博实例文档的文本字段。以下是打算分析的文本：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#Yummm :) Drinking a latte at Caffe Grecco in SF&#x27;s historic North Beach...</span><br><span class="line">Learning text analysis with #SolrInAction by @ManningBooks on my i-Pad</span><br></pre></td></tr></table></figure>
+<p>正如本章开头所介绍的，文本分析的主要目标是让用户使用自然语言进行搜索，无须考虑搜索词项的所有可能表达形式。图6.1中用户通过文本字段搜索San Francisco North beach coffee，这是一个自然语言查询，用户期望找到北边海滩上所有不错的咖啡屋。也许我们的用户正在通过搜索社交媒体内容，找寻在北边海滩喝咖啡的好地方。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625411850788-4659adce-e8f2-43f7-a881-123861d92f8c.png#height=1432&id=SGUoO&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1432&originWidth=1878&originalType=binary&ratio=1&size=1166441&status=done&style=none&width=1878" alt="image.png"><br />我们判断，上面这条微博应该是这个查询的最优先匹配结果。虽然从精确的文本匹配来看，San Francisco、north beach与coffee这三个词并没有出现在这条微博里。当然，返回的文档里包含了North Beach。那么问题来了，只有指定搜索的索引不区分大小写，才能实现匹配。由此判断，因为用户搜索使用的词项与文档中的词项存在关系，如表6.1所示，所以这条微博文档应该是这个查询的最优先匹配结果。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625412056576-0a59dd80-79ee-45d4-bb10-c53a7d5b29e7.png#height=394&id=ZVycp&margin=%5Bobject%20Object%5D&name=image.png&originHeight=394&originWidth=1332&originalType=binary&ratio=1&size=268605&status=done&style=none&width=1332" alt="image.png"><br />因此，摆在我们面前的任务是，使用Solr文本分析框架将微博文本转换为一种易于找寻的形式。图6.2展示了Solr文本分析框架对微博文本的转换情况，目前你可以把这个框架想象成一个黑盒。本章其余部分将打开这个黑盒，介绍其工作原理。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625412160798-6f0e6d04-2394-44b0-b0ee-8e8f5e5db467.png#height=726&id=Z9EsT&margin=%5Bobject%20Object%5D&name=image.png&originHeight=726&originWidth=1976&originalType=binary&ratio=1&size=625422&status=done&style=none&width=1976" alt="image.png"><br />你能发现使用了哪些转换吗？表6.2提供了Solr文本分析的各种工具的核心转换一览表，后面后详细介绍。注意到，单独看每个转换似乎都非常简单，但它们合在一起就会大大改善搜素体验。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625412290076-a8b55a45-8fb3-43cd-a5f5-10aaf03945ba.png#height=1268&id=ZPZ4l&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1268&originWidth=1986&originalType=binary&ratio=1&size=1092234&status=done&style=none&width=1986" alt="image.png"><br />有些Solr类名看起来吓人，不用担心，本章会依次介绍每个分析工具。现在，我们使用Solr内置工具对这条微博进行一些有趣的转换。<br /><strong>我们使用Solr的ASCIIFoldingFilterFactory类把caffē转换成caffe</strong>，这意味着，用户搜索时不需要输入变音符ē。如果没有这个转换，用户搜索caffe时搜索不到索引为caffē的文档。i-Pad中间有一个连字符，我们使用WordDelimiterFilterFactory将其转换成词项iPad和i pad，添加到索引里。这意味着，包含ipad、i pad或者i-pad的查询词项都会匹配出结果。iPad其实才是正确的拼写方式，但在搜索里要尽可能容纳词项的各种简单变化。<br /><strong>Solr的PatternReplaceCharFilterFactory类使用正则表达式实现字符和词项的替换</strong>。例如，在社交媒体内容(如微博)中经常出现重复字母的单词，这样是为了表达情感(例如yummm)。从搜索角度来看，yummm和yumm基本上是一样的。因此，我们将重复字母最多保留两个，这样可以减少索引中唯一词项的数量。本章随后会介绍如何在Solr中使用正则表达式实现这个变换。<br />值得一提的是，之前介绍的转换都是由Solr内置工具实现的。也就是说，我们只需在Solr的schema.xml中进行配置，无须编写任何Java代码。虽然Solr的内置工具很强大，但有时你还是需要对它进行功能扩展。6.4.3节会介绍如何使用Solr的插件框架来处理社交媒体内容中诸如bit.ly这样的短网址。<br />此时，你应该对Solr的文本分析印象还不错，想要知道如何上手。Solr提供了丰富且强大的文本转换工具，如何对索引过程中的文档应用这些工具呢？下一节我们将从字段类型着手进行文本分析。<br><a name="iuGyf"></a></p>
+<h2 id="基础文本分析"><a href="#基础文本分析" class="headerlink" title="基础文本分析"></a>基础文本分析</h2><p>第5章中讲过，schema.xml的<types>部分使用<fieldType>元素定义了文档中所有可能的字段，每个<fieldType>定义了字段的格式，以及在索引与查询中该字段如何进行分析。Solr的示例schema提供了丰富且可扩展的字段类型定义列表，能够满足大多数搜索应用的需要。如果Solr的预定义字段类型无法满足需要，可以使用Solr插件框架创建自己的字段类型。本章最后一节会介绍一个Solr插件框架的例子。<br />如果所有字段都是结构化数据，如语种代码和时间戳，那就没必要使用Solr。关系型数据库更适合对结构化数据进行索引与搜索。非结构化文本的处理才是Solr擅长的。因此，Solr的示例schema预定义了很多有用的文本分析字段类型。代码清单6.1是text_general字段的XML定义，这是一种较为简单的字段类型，我们将它作为微博文本分析的起点。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625490096255-d1e3408c-51b2-4cdb-a5ea-cf655ab51f11.png#height=1274&id=iak4h&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1274&originWidth=2210&originalType=binary&ratio=1&size=1077143&status=done&style=none&width=2210" alt="image.png"><br />本章的例子会对Solr示例自带的schema.xml做略微改动。建议将Solr示例自带的schema.xml替换成 <code>$SOLR_IN_ACTION/example-docs/ch6/schema.xml</code> 这个定制版。具体来说，你需要使用一下命令覆盖 <code>$SOLR_INSTALL/example/solr/collection1/conf/schema.xml</code> ：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp $SOLR_IN_ACTION/example-docs/ch6/schema.xml</span><br><span class="line"><span class="meta">$</span><span class="bash">SOLR_INSTALL/example/solr/collection1/conf/</span></span><br></pre></td></tr></table></figure>
+<p>此外，还需要将wdfftypes.txt文件复制到conf目录下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp $SOLR_IN_ACTION/example-docs/ch6/wdfftypes.txt</span><br><span class="line"><span class="meta">$</span><span class="bash">SOLR_INSTALL/example/solr/collection1/conf/</span></span><br></pre></td></tr></table></figure>
+<p>由于前面章节已经索引了一些测试文档，为避免干扰，我们删除data目录下的所有文件，从一个空的搜索索引开始。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rm -rf $SOLR_INSTALL/example/solr/collection1/data/*</span><br></pre></td></tr></table></figure>
+<p>复制好定制的schema.xml和wdfftypes.txt之后，在Solr管理控制台的内核管理页上重载collection1内核，或重启Solr服务器。<br />在代码清单6.1中，为便于理解，我们将这个XML定义分解成几部分。在顶部，定义了一个<fieldType>。处理文本数据的字段需要指定其类属性为solr.TextField。Solr会对这些文本进行分信息。此外，还需要给该文本字段命名，名称应提现待分析文本的特点。例如，当不清楚分析的文本的语种时，命名为text_general是一个不错的选择。<br><a name="gWpUA"></a></p>
+<h3 id="分析器"><a href="#分析器" class="headerlink" title="分析器"></a>分析器</h3><p>在<fieldType>元素中至少定义一个<analyzer>，以确定如何分析文本。<strong>常见的做法是定义两个单独的<analyzer>元素：一个用于分析索引时的文本，一个用于分析用户搜索时输入的文本</strong>。text_general字段类型就使用了这种方式。稍微思考一下，为什么要对索引与查询使用不同的分析器？对索引文档与查询处理进行文本分析，后者往往需要进行更多的分析。例如，查询的文本分析中通常会添加同义词，而索引的文本分析也不会这样做，同义词会增大索引体积，这样处理对同义词管理页相对容易些。随后会对这种方式举例说明。<br />虽然可以定义两个单独的分析器，但查询词项的分析器必须兼容索引时的文本分析方式。考虑这样一种情况：分析器只对索引词项进行小写转换，不对查询词项进行小写转换。那么，由于索引只中只有north和beach，用户搜索North Beach就无法找到前面提到的那条微博。<br><a name="gPI0Y"></a></p>
+<h3 id="分词器"><a href="#分词器" class="headerlink" title="分词器"></a>分词器</h3><p>在Solr中，每个**<analyzer>将文本分析过程分为两个阶段：语词切分(解析)和语词过滤<strong>。严格来说，还有第三阶段，即</strong>语词切分之前的预处理阶段**，这个阶段可以使用字符过滤器。6.3.1节会详细介绍字符过滤，这里重点介绍语词切分和语词过滤器。<br />在语词切分阶段，文本以各种解析形式被拆分成词元流。WhitespaceTokenizer是最基础的分词器，仅适用空格拆分文本。StandardTokenizer则更为常见，它使用空格和标点符号拆分出词项，而且可用于处理网址、电子邮件地址和缩写词。分词器的定义需要指定Java实现的工厂类。要使用常见的StandardTokenizer，需要指定分词器的类为solr.StandardTokenizerFactory。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">tokenizer</span> <span class="attr">class</span>=<span class="string">&quot;solr.StandardTokenizerFactory&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<p>在Solr中，因为大多数分词器需要提供参数构造器，所以必须指定为工厂类，而不是底层的分词器实现类。通过使用工厂方法，Solr提供了在XML中定义分词器的标准做法。在后台，每个工厂类知道如何将XML配置属性“翻译”为构造特定分词器实现类的一个实例。所有分词器会生成词元流，可以使用滤器进行处理，执行词元的某种转换。<br><a name="6LA2e"></a></p>
+<h3 id="分词过滤器"><a href="#分词过滤器" class="headerlink" title="分词过滤器"></a>分词过滤器</h3><p>分词过滤器对词元执行以下三种操作中的一种。</p>
+</li>
+<li><p><strong>词元转换：改变词元的形式，例如，所有字母小写或题干提取</strong></p>
+</li>
+<li><p><strong>词元注入：向词元流中添加一个词元，例如，同义词过滤器的做法</strong></p>
+</li>
+<li><p><strong>词元移除：删除不需要的词元，例如，停用词过滤器的做法</strong></p>
+</li>
+</ul>
+<p>过滤器可以链接在一起，对词元进行一系列的转换处理。过滤器的顺序很重要，你不希望看到，应该在小写转换过滤器之后使用的过滤器提前被使用的情况出现。<br />让我们从StandardTokenizer开始来了解对示例微博的整个分析过程。<br><a name="IBO9r"></a></p>
+<h3 id="StandardTokenizer"><a href="#StandardTokenizer" class="headerlink" title="StandardTokenizer"></a>StandardTokenizer</h3><p>此时，你应该已经熟悉了schema的设计过程，以及在schema.xml中如何定义字段和字段类型。让我们运用这些知识对第5章的示例微博进行基础的文本分析。文本分析的<strong>第一步</strong>是，确定如何<strong>使用分词器将文本分析为词元流</strong>。从StandardTokenizer的使用开始，这个分词器是许多Solr和Lucene项目的首选解决方案，<strong>这个分词器使用空格和标点符号来拆分文本</strong>，这点做得很好，还能轻松地处理首字母缩写词和缩略词。我们通过示例微博的解析来看看这个分词器的作用：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">#Yummm :) Drinking a latte at Caffė Grecco in SF&#x27;s historic North Beach</span><br><span class="line">Learning text analysis with #SolrInAction by @ManningBooks on my i-Pad</span><br></pre></td></tr></table></figure>
+<p>如果熟悉用户创建内容(User-Generated Content)的社交网络(如Twitter)，你会发现，与大多数微博相比，这条微博的语法结构没什么问题，但从文本解析的角度看，这条微博在处理上会有一些有趣的挑战。图6.3是StandardTokenizer生成的词元。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625645976742-3576b928-9d85-4e7e-8076-24d811d07d10.png#height=714&id=bH7Bg&margin=%5Bobject%20Object%5D&name=image.png&originHeight=714&originWidth=1196&originalType=binary&ratio=1&size=745655&status=done&style=none&width=1196" alt="image.png"><br />如你所见，StandardTokenizer成功地将这条微博拆分成由23个不同词元组成的词元流。具体来说，StandardTokenizer提供以下功能：</p>
+<ul>
+<li><strong>通过空格、标准的标点符号(如句号、逗号、分号等)拆分文本。注意，省略号和表情符号:)被移除了</strong></li>
+<li><strong>保留互联网域名和电子邮件地址，分别作为单个词元</strong></li>
+<li><strong>连字符词项拆分成两个词元，例如，i-Pad被拆分为i和Pad</strong></li>
+<li><strong>支持可配置的最大词元长度属性，默认值是255</strong></li>
+<li><strong>从主体标签和提及符号中去除#号和@号</strong></li>
+</ul>
+<p>接下来，我们来看Solr提供的用于基础文本分析的几种常见分词过滤器。还是以那条微博为例，在文本添加到索引之前，还要解决词元流相关的一些问题。首先，一些极为常见的词项，例如，a和in仅是语法要求，它们对区分文档几乎没有任何价值。大多数索引文档中出现的常见词被称为停用词，使用StopFilterFactory可以轻松的从词元流中移除它们。<br><a name="MYzsT"></a></p>
+<h3 id="使用StopFilterFactory移除停用词"><a href="#使用StopFilterFactory移除停用词" class="headerlink" title="使用StopFilterFactory移除停用词"></a>使用StopFilterFactory移除停用词</h3><p>Solr进行文本分析时会使用StopFilterFactory移除词元流中的停用词，这些停用词对用户查找相关文档几乎没有价值。<strong>在索引时移除停用词会有效减少索引大小，提高搜索性能</strong>。这样做减少了Solr将要处理的文档数据数量，也减少了对包含停用词的查询进行相关度计算时的词项数量。代码清单6.1定义了StopFilterFactory来分析示例微博：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;solr.StopFilterFactory&quot;</span> <span class="attr">ignoreCase</span>=<span class="string">&quot;true&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">words</span>=<span class="string">&quot;lang/stopwords_en.txt&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>请注意，我们指定了一个英语停用词列表(words=”stopwords_en.txt”)。Solr开箱即用，它提供了基础的停用词列表，在此基础上可以根据需求自定义停用词。stopwords_en.txt文件位于conf/的自目录lang/里，完整的路径为 <code>$SOLR_INSTALL/example/solr/colletion1/conf/lang/</code> 。以下是Solr示例服务器包含的英语停用词：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">a	an	and	are	as	be	but	by	for	if	in	into	is	it	no	not	of	on	or	such	that	the	their	then	there	these	they	to	was	will	with</span><br></pre></td></tr></table></figure>
+<p>一般而言，停用词移除具有语言专属性。如果分析德文，就需要一个包含die、ein这样词项的停用词列表。Solr提供多种语言的停用词列表定制文件，他们位于Solr各个内核conf/的子目录lang/里。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">停用词移除的高级方法</span><br><span class="line">	谷歌拥有一项停用词处理专利，在索引时处理所有听过你歌词，通过判断检索到的文档集合中是否使用通用词，选择性的移除查询中的停用词，请参阅http://www.google.com/parents/US7945579。谷歌的停用词专利方法是搜索提供者如何使用高级文本分析来提升行业竞争力的一个有力做法。即使是停用词移除这样简单的东西，也不存在一个全能的解决方案。</span><br></pre></td></tr></table></figure>
+<p><a name="XoAK9"></a></p>
+<h3 id="使用LowerCaseFilterFactory对词项进行小写转换"><a href="#使用LowerCaseFilterFactory对词项进行小写转换" class="headerlink" title="使用LowerCaseFilterFactory对词项进行小写转换"></a>使用LowerCaseFilterFactory对词项进行小写转换</h3><p>LowerCaseFilterFactory将词元的所有字母转换成小写。对6.2.4节的示例微博进行索引时，ManningBooks会被转换为manningbooks。这样一来，包含MANNINGBOOKS、ManningBooks、manningbooks以及其他大小写混合形式的用户查询都可以找到这条微博。定义此过滤器很简单：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;solr.LowerCaseFilterFactory&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<p>与停用词的情况类似，是否需要对所有词项使用小写转换过滤器有时并不好判断。举例来说，一句话中间的单词首字母大写通常表示一个专有名词。在示例微博中，如果将用户寻找的North Beach作为专有名词进行识别，搜索结果的准确度就会提升。由于north和beach都是各种语境中常用的普通单词，<strong>首字母大写的话可以提升查询专指度</strong>。<br />例如，搜索North Beach的用户可能对旧金山附近的地方感兴趣，对某岛屿背部海滩的高浪没什么兴趣。这种<strong>更为细致的词项小写转换做法要求用户在搜索时使用准确的大小写拼法</strong>。大多数情况下需要使用小写转换过滤器，但在过滤链的哪个环节使用它，这点还需要认真考虑。如果同义词列表都是小写，那就需要在同义词过滤器之前使用小写转换过滤器。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625752195954-9111a175-0ae3-45ab-b682-ccbfc093a672.png#height=1166&id=EitVQ&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1166&originWidth=1992&originalType=binary&ratio=1&size=991810&status=done&style=none&width=1992" alt="image.png"><br />至此，我们学习了如何对示例微博进行基础的文本分析。接下来，我们用学到的文本分析只是进行实际操作。<br><a name="VJNrw"></a></p>
+<h3 id="通过Solr分析表单进行文本分析测试"><a href="#通过Solr分析表单进行文本分析测试" class="headerlink" title="通过Solr分析表单进行文本分析测试"></a>通过Solr分析表单进行文本分析测试</h3><p><strong>Solr提供了一个简单文本分析表单，允许用户对示例文本进行分析测试，无须构建索引文档。在没有索引文档的情况下，此表单还支持示例文档的查询匹配测试</strong>。确定Solr服务器在运行，在浏览器中键入<a target="_blank" rel="noopener" href="http://localhost:8983/solr/%EF%BC%8C%E8%BF%9B%E5%85%A5%E7%AE%A1%E7%90%86%E6%8E%A7%E5%88%B6%E5%8F%B0%EF%BC%8C%E7%82%B9%E5%87%BBcollection1%EF%BC%8C%E5%A6%82%E5%9B%BE6.5%E6%89%80%E7%A4%BA%E3%80%82">http://localhost:8983/solr/，进入管理控制台，点击collection1，如图6.5所示。</a><br />当路浏览器载入表单后，在Field Value(Index)文本框中输入示例微博内容，在下拉列表中选择字段类型为text_general，如图6.6所示。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625752492989-341fdfd3-f3d6-460f-8a01-d853a4c1f19b.png#height=1326&id=FERNv&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1326&originWidth=1938&originalType=binary&ratio=1&size=527683&status=done&style=none&width=1938" alt="image.png"><br />输入文本内容并选择字段类型之后，单击Analyse Values按钮以查看分析结果。在分析测试表单之下，Solr使用text_genetal字段类型对待索引文本进行分析，给出了该文本内容的分析步骤。文本解析首先使用StandardTokenizer(ST)进行分词，然后依次使用StopFilter(SF)和LowerCaseFilter(LCF)进行过滤。<br />接下来，执行一个查询，看看是否能与示例微博实现匹配。在Field Value(Query)文本框输入drinking a latte，如图6.7所示。单击Analyse Values按钮，Solr会高亮显示在文本与查询中同时出现的词项，这里是drinking和latte。<br />接下来，输入San Francisco drink cafe ipad，再次点击Analyse Values按钮。这是一个无意义的查询，这里仅用于说明实例文档匹配的情况。这个无异议的查询足以说明，<strong>词项之间微小的差异可能会导致用户错失高度相关的文档</strong>。这里没有一个查询词项能匹配出这个实例文档！我们可以很容易的看出查询词项与文档词项的相似程度，但对Solr而言，他们之间没有关系！我们需要更好的文本分析方法来解决不匹配的问题。<br />在第一轮中，我们做了很少的工作就解决了文本解析与基础分析的很多问题。不过，仍有一些问题有待解决，这些问题阻碍了用户顺利找到这条示例微博。你能看出这条微博文本中还存在哪些潜在问题吗？将你的思考与图6.8进行对比。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625752940680-5b0ba73d-23df-4612-86c8-6955cd4e9a8d.png#height=1616&id=kPSCW&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1616&originWidth=1950&originalType=binary&ratio=1&size=1069190&status=done&style=none&width=1950" alt="image.png"><br />除非对微博和其他社交媒体内容的进行索引，否则你可能不会遇到图6.8中提到的分析问题。一般来说，重点是研究有代表性的索引文档，以此确定需要分析的类型，就像这里的做法。<br />很明显，text_general字段类型提供基础文本分析已经无法满足当前的需求。因此，我们需要自定义一个新的字段类型，利用之前讨论过的工具以及一或两个新工具来具体实现。<br><a name="4j7G4"></a></p>
+<h2 id="为微博文本自定义一个字段类型"><a href="#为微博文本自定义一个字段类型" class="headerlink" title="为微博文本自定义一个字段类型"></a>为微博文本自定义一个字段类型</h2><p>我们已经在社交媒体文本你分析的道路上取得了一定进展，但还有一些明显的问题需要解决。本节通过介绍其他的Solr内置文本分析工具来解决这些问题。由于Solr预定义的字段类型无法满足我们的所有需求，因此我们在schema.xml中自定义一个新字段类型。在schema.xml的<types>元素下面增加text_microblog字段，如代码清单6.2所示。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625920681876-cc2ea6a3-b478-408f-8097-8884c71df36b.png#height=1460&id=SofE6&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1460&originWidth=1992&originalType=binary&ratio=1&size=995247&status=done&style=none&width=1992" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625920713226-f85f7cfa-5643-458d-a428-689063be786b.png#height=926&id=aimmj&margin=%5Bobject%20Object%5D&name=image.png&originHeight=926&originWidth=1924&originalType=binary&ratio=1&size=772052&status=done&style=none&width=1924" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625920771308-3937e3ed-6e44-4dce-90e7-cec408a4ef3e.png#height=2602&id=XiZEO&margin=%5Bobject%20Object%5D&name=image.png&originHeight=2602&originWidth=2016&originalType=binary&ratio=1&size=1864207&status=done&style=none&width=2016" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625920838921-51689ca8-71fa-439c-857a-70095ae913da.png#height=376&id=KGW6B&margin=%5Bobject%20Object%5D&name=image.png&originHeight=376&originWidth=1792&originalType=binary&ratio=1&size=218094&status=done&style=none&width=1792" alt="image.png"><br />你们应该可以读懂这个字段类型定义的结构及其包含的一些元素，其中还有一些内容我们还没有讨论。表6.3是本节介绍的新工具一览表。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625920919732-935754e4-57d7-4a41-9837-6e9903710af3.png#height=842&id=ZZkPr&margin=%5Bobject%20Object%5D&name=image.png&originHeight=842&originWidth=1954&originalType=binary&ratio=1&size=747398&status=done&style=none&width=1954" alt="image.png"><br />后面会依次介绍这些工具。首先，使用正则表达式来移除词项中的重复字母，如yummm。<br><a name="stedL"></a></p>
+<h3 id="使用PatternReplaceCharFilterFactory折叠重复的字母"><a href="#使用PatternReplaceCharFilterFactory折叠重复的字母" class="headerlink" title="使用PatternReplaceCharFilterFactory折叠重复的字母"></a>使用PatternReplaceCharFilterFactory折叠重复的字母</h3><p>在Solr中，传入的字符流在分词处理之前，字符过滤器对其进行预处理。与分词过滤器类似，CharFilters作为过滤链中的一环，可以对文本字符进行添加、更改和移除。Solr 4内置了三个CharFilters，具体如下。</p>
+<ul>
+<li><strong>solr.MappingCharFilterFactory：使用外部配置文件中定义的字符进行替换</strong></li>
+<li><strong>solr.PatternReplaceCharFilterFactory：使用正则表达式进行字符替换</strong></li>
+<li><strong>solr.HTMLStripCharFilterFactory：从文本中去除HTML标记</strong></li>
+</ul>
+<p>跟Solr大多数功能一样，你可以使用插件框架设计自己的过滤器。在这三个过滤器中，PatternReplaceCharFilterFactory似乎最适合当前的文本分析需求。微博内容一般不包含嵌入的HTML，这里也不需要映射任何字符。因此，这里不展开介绍MappingCharFilterFactory和HTMLStripCharFilterFactory，有关这两个过滤器的详细内容请参阅**Solr wiki(<a target="_blank" rel="noopener" href="http://wiki.apache.org/solr/)**%E3%80%82%E8%AE%A9%E6%88%91%E4%BB%AC%E7%9C%8B%E7%9C%8B%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8PatternReplaceCharFilterFactory%E6%9D%A5%E8%A7%A3%E5%86%B3%E7%A4%BA%E4%BE%8B%E5%BE%AE%E5%8D%9A%E5%88%86%E6%9E%90%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98%E3%80%82">http://wiki.apache.org/solr/)**。让我们看看如何使用PatternReplaceCharFilterFactory来解决示例微博分析的一些问题。</a><br />solr.PatternReplaceCharFilterFactory使用正则表达式来过滤字符。要配置这个Java工厂方法，需要定义这两个属性：pattern和replacement。pattern是一个正则表达式，用来识别文本中想要替换的字符。attribute指定用什么值去替换匹配到的字符⑥。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">如果你需要复习一下正则表达式，建议在www.regexplanet.com上学习和测试正则表达式。</span><br></pre></td></tr></table></figure>
+<p>如果你不熟悉正则表达式，不用担心，在大多数情况下都可以使用Google这些搜索引擎从网上找到需要的正则表达式。<br />我们使用<charFilter>解决这个麻烦的重复字母问题，比如yummm。要将重复的字母减少到最多出现2个，我们需要使用正则表达式识别出重复字母序列，相应的正则表达式为([a-zA-Z])\1+。解释一下，[a-zA-Z]是一个字符类，用于识别大写或小写的单个字母。该字符类外面的括号表示将匹配的字母作为一组结果。\1表示第一组重复匹配结果的回溯引用(backreference)序号，+号表示匹配的字母可以出现一次或多次。<br />以上就是匹配模式，接下来用什么来替换呢？我们的目标是将重复的字母减少到最多2个，因此解决对象是[a-zA-Z]匹配的词项的一部分。正则表达式中[a-zA-Z]部分表示一个匹配结果，我们将其定义为$1。这时，我们的替换值就是$1$1。举例来说，在yummm的匹配中，[a-zA-Z]匹配到第一个m，整个正则表达式匹配到mmm，然后将mmm用mm替换掉。要让整个表达式在text_microblog字段类型中发挥作用，需要添加代码清单6.3中XML内容。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1625923810482-26d325ee-5009-4710-af75-ffbb984eb363.png#height=294&id=qBl3C&margin=%5Bobject%20Object%5D&name=image.png&originHeight=294&originWidth=1962&originalType=binary&ratio=1&size=325680&status=done&style=none&width=1962" alt="image.png"><br /></p>
+<p><a name="CYJke"></a></p>
+<h3 id="保留主题标签、提及符号和连字符词项"><a href="#保留主题标签、提及符号和连字符词项" class="headerlink" title="保留主题标签、提及符号和连字符词项"></a>保留主题标签、提及符号和连字符词项</h3><p>StandardTokenizer处理示例微博时出现了一些小问题。具体来说，StandardTokenizer把主题标签的#号和提及符号@号过滤掉了。此外，StandardTokenizer把连字符词项分开了，例如，i-Pad变成了i和Pad。这导致查询iPad时找不到示例微博，正如前一节所见到的。稍后会介绍如何处理iPad查询问题。现在，让我们讨论一下，为什么要保留主题标签的#号和提及符号的@号。<br />在上一节中，StandardTokenizer将@ManningBooks的@号过滤掉了。这意味着，我们失去了这个词项的一些信息。具体来说，@ManingBooks在社会化网络环境中拥有特殊含义，它是Manning出版社的专用社交账号。这里的提及符号有特定意图，文本分析时移除@号的做法可能会导致意外的搜索结果，特别是文本分析与词干提取结合的情况下容易产生意外。<br />主题标签也面临同样的问题。#fail作为一个主题标签，常用于表达一个人对他人、地方或某种事物(如品牌)的不满意。如果想找到所有包含#fail的微博，仅匹配包含fail的微博可能有问题，例如 <code>I partied too late last night, I hope I don&#39;t fail today&#39;s mid-term exam。</code> 因此，在文本分析中保留#fail与保留#开头的fail是两码事。一般来说，我们希望保留主题标签和提及符号，这样就可以灵活区分包含#fail主题的微博和仅包含fail一词的微博。这里给出的建议是，在文本分析中需要保留特定词项的上下文语境。<br />希望你赞同在微博中保留#号和@号开头的字符的做法。接下来我们要搞清楚如何去做。首先，我们要明确字符和移除规则。StandardTokenizer使用字分隔符将文本拆分成词元，其中#号和@号也被视为字分隔符之一。如果你是Java开发人员，你的初步想法可能会考虑扩展StandardTokenizer，重写这两个特殊字符的移除行为。不过，对StandardTokenizer进行扩展并不容易。更重要的是，无须编写自定义代码就可以解决问题！借此机会，我们学习两个新的Solr文本分析工具，即WhitspaceTokenizerFactory和WordDelimiterFilterFactory。<br><a name="eEDil"></a></p>
+<h4 id="WhitspaceTokenizerFactory"><a href="#WhitspaceTokenizerFactory" class="headerlink" title="WhitspaceTokenizerFactory"></a>WhitspaceTokenizerFactory</h4><p>WhitspaceTokenizerFactory是一个非常简单的分词器，仅根据空格对文本进行拆分。回忆一下StandardTokenizer将示例微博拆分成23个独立的分词单元。与之相比，WhitspaceTokenizerFactory的分词结果有所差异，如图6.9所示。<br />看上去有些许改进？或许吧。这个分词器解决了主题标签、提及符号和连字符的问题，但同时又引出了一些新问题。具体来说，表情符号 <code>:)</code> 现在成了一个分词单元，省略号 <code>...</code> 与Beach连载了一起，即Beach…。所幸，这些新问题可疑使用Solr的WordDelimiterFilterFactory轻松解决。<br><a name="Bo1Do"></a></p>
+<h4 id="WordDelimiterFilterFactory"><a href="#WordDelimiterFilterFactory" class="headerlink" title="WordDelimiterFilterFactory"></a>WordDelimiterFilterFactory</h4><p>WhitspaceTokenizerFactory简单地根据空格对文本进行拆分，WordDelimiterFilterFactory则对其进行有效补充，解决了空格拆分导致的大多数问题。<strong>该过滤器在更高层面上使用各种解析规则，将分词单元变为子词(subwords)<strong>。在详细介绍这些规则之前，让我们先来看看这个过滤器如何帮助我们保留主题标签和提及符号的两个特殊字符。在示例微博上使用代码清单6.3中的选项配置WordDelimiterFilterFactory。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626253236501-741d8756-12d9-407f-837f-2066396b6a98.png#height=874&id=MBnYC&margin=%5Bobject%20Object%5D&name=image.png&originHeight=874&originWidth=1238&originalType=binary&ratio=1&size=456365&status=done&style=none&width=1238" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626253269488-bff97550-849c-400b-aaa9-20404d06743f.png#height=450&id=MnWiJ&margin=%5Bobject%20Object%5D&name=image.png&originHeight=450&originWidth=1246&originalType=binary&ratio=1&size=236920&status=done&style=none&width=1246" alt="image.png"><br />默认情况下，这个过滤器也会过滤掉主题标签的#号和提及符号的@号。但与StandardTokenizer不同，</strong>WordDelimiterFilter提供了一种简单的方法，使用一个简单的“类型”映射文件</strong>（这里是wdfftypes.txt）来指定哪些字符可以作为文本分隔符。wdfftypes.txt文件包含两个映射：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">\# =&gt; ALPHA</span><br><span class="line">@ =&gt; ALPHA</span><br></pre></td></tr></table></figure>
+<p>这些设置将#号和@号映射到ALPHA类，这意味着，WordDelimiterFilter实例就不会把他们作为分隔符。#号前面的反斜杠表示，Solr读取wdfftypes.txt文件时不会把这一行当成注释行。通过简单的映射，主题标签和提及符号就保留在文本中了。<br />WordDelimiterFilter也可以很好地处理连字符问题。在示例微博中，作者使用i-Pad不是标准写法，正确写法是iPad。如果示例微博能够与查询的所有可能形式（如i-Pad、iPad）进行匹配，那就再好不过了。考虑一下索引与查询两个阶段的文本分析需求，以确保三种查询形式都能匹配出结果。希望你已经搞清楚，WordDelimiterFilter需要根据连字符将i-Pad拆分成两个分词单元：i和Pad，还需要加入iPad这个新的分词单元。设置generateWordParts=1和catenateWords=1，WordDelimiterFilter就可以实现想要的确切分词结果。<br />WordDelimiterFilter提供了许多选项用于分词转换的微调，以帮你实现所需的分词结果。表6.4简要介绍了每个选项的用法。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626253893310-573932b6-4235-41bb-9e9c-70c6a95fe52a.png#height=1054&id=B0ilv&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1054&originWidth=1248&originalType=binary&ratio=1&size=636786&status=done&style=none&width=1248" alt="image.png"><br />WordDelimiterFilterFactory在处理内容时需要进行一些实验性尝试。我们建议使用Solr的分析表单进行试验，如6.2.7节的做法。至此，我们已经解决了主题标签、提及符号和连字符问题，接下来我们把注意力转向重音符号的处理，如caffė。<br><a name="mXVqO"></a></p>
+<h3 id="使用ASCIIFoldingFilterFactory移除变音符号"><a href="#使用ASCIIFoldingFilterFactory移除变音符号" class="headerlink" title="使用ASCIIFoldingFilterFactory移除变音符号"></a>使用ASCIIFoldingFilterFactory移除变音符号</h3><p>在搜索领域，往往一些简单的做法会让效果大不相同。字符中的变音符处理就是这样一种情况，示例微博的caffė或jalapenō包含变音符。大多数情况下，你无法确定用户搜索时是否会输入变音符，所以Solr提供了ASCIIFoldingFilterFactory方法，<strong>将出现的变音符转换成ASCII码等价值，前提是存在对应的ASCII码</strong>。在schema.xml中的分析器部分添加以下过滤器：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;solr.ASCIIFoldingFilterFactory&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p><strong>最好在小写过滤器之后使用此过滤器，这样只需处理小写字符</strong>。ASCIIFoldingFilter仅适用于拉丁字符，其他语言请使用solr.analysis.ICUFoldingFilterFactory，这个工厂方法在Solr 3.1之后的版本可用。<br><a name="JmrSE"></a></p>
+<h3 id="使用KStemFilterFactory提取词干"><a href="#使用KStemFilterFactory提取词干" class="headerlink" title="使用KStemFilterFactory提取词干"></a>使用KStemFilterFactory提取词干</h3><p><strong>词干提取根据特定语言规则，将词转换成基础词形</strong>。Solr提供了许多词干提取过滤器，每种各有优缺点。这里介绍一个基于Krovetz词干提取算法的过滤器： <code>solr.KStemFilterFactory</code> 。与ProterStemmer等其他流行的词干提取器相比，这个词干提取器的转换并不是那么“激进”。这里使用KStemFilterFactory对drinking和learning这样的词项移除ing⑦。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">⑦ ：</span><br><span class="line">参见R.Krovetz，1993：“Viewing morphology as an inference process” in R.Korfhage et al.，Proc. 16th ACM SIGIR Conference，Pittsburgh,June 27-July 1,1993;pp. 191-202.⑦：</span><br></pre></td></tr></table></figure>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;solr.ASCIIFoldingFilterFactory&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+<p>表6.5展示了使用KstemFilterFactory和PorterStemFilterFactory进行词干提取的示例。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626418430161-3ccfc270-e4cc-4590-b715-0e7c4dd8b1e9.png#height=324&id=ONu5d&margin=%5Bobject%20Object%5D&name=image.png&originHeight=324&originWidth=1230&originalType=binary&ratio=1&size=151979&status=done&style=none&width=1230" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626418458923-f4b811f9-90c4-4a39-b23c-a55b4c42467b.png#height=212&id=QIAdp&margin=%5Bobject%20Object%5D&name=image.png&originHeight=212&originWidth=1234&originalType=binary&ratio=1&size=126173&status=done&style=none&width=1234" alt="image.png"><br />从这个例子可以看出，词干提取Porter算法比KStemmer算法更为激进。<strong>过于激进的问题是，搜索应用可能会匹配出与用户查询无关的文档，这样会影响查准率</strong>。加入用户搜索 <code>wedding in July</code> ，使用Porter算法会提取出wedding的词干web，而web也是Wednesday的缩写。在举一例，使用Porter算法提取operating和operative的词干都是oper，因此包含convert operative和operating system的文档都将是查询operating capital的匹配结果。<br />这里需要注意，对示例微博使用KStemmer进行题干提取时，drinking提取的词干是drink，但learning提取的词干并不是我们所期望的learn，出现这种奇怪的提干提取结果是因为KStemmer使用了一个保护词列表，列表中的词不会被提取词干，learning就是其中一个保护词。<br />一般来说，词干提取器扩展了与查询匹配的文档集，即提高了查询率，但与此同时会降低查准率。第14章会进一步讨论词干提取。<br><a name="4nyIg"></a></p>
+<h3 id="在查询阶段使用SynonymFilterFactory加入同义词"><a href="#在查询阶段使用SynonymFilterFactory加入同义词" class="headerlink" title="在查询阶段使用SynonymFilterFactory加入同义词"></a>在查询阶段使用SynonymFilterFactory加入同义词</h3><p><strong>在词元流中SynonymFilterFactory会为重要词项加入同义词</strong>。举例来说，你可能想要在词元流中为house添加home这个同义词。在大多数情况下，同义词的添加只用于查询阶段的分析。这样做有助于减少索引的大小，同义词列表的变更维护也更容易些。<strong>如果在索引阶段引入同义词，你会发现词项对应多出一个新同义词，针对这个变化，不得不重新对文档进行索引。如果只在查询处理时加入同义词，新同义词的添加无须重新进行索引</strong>。在schema.xml中定义SynonymFilter的方法如下：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;solr.SynonymFilterFactory&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">synonym</span>=<span class="string">&quot;synonyms.txt&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">ignoreCass</span>=<span class="string">&quot;true&quot;</span> <span class="attr">expand</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>这个过滤器只对查询分析器有效，特别适用于单个词项的同义词。另外，你还要考虑它在过滤链中所处的位置。要确定合适的位置，需要在同义词匹配之前考虑做怎样的转换。<strong>通常最有用的做法是，将这个过滤器作为分析器的最后一个，以便同义词列表可以认为分词单元上的所有其他转换都已经做完</strong>。假设在同义词过滤之后使用ASCIIFoldingFilter，则意味着同义词列表需要包括变音符，例如，caffė。<br />在示例微博中，有几个词可以使用同义词，包括SF、latte和caffe。在Solr中建立这些词项的同义词，需要在过滤器定义中添加以下的synonyms.txt文件：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">sf,san fran,sanfran,san francisco</span><br><span class="line">latte,coffee</span><br><span class="line">caffe,cafe</span><br></pre></td></tr></table></figure>
+<p>Solr提供了映射方法，这虽然看起来不错，但你可能想知道谁会去手动配置上千个同义词？视情况而定吧，这也是Solr目前存在的一个问题。目前Solr技术社区有一些可用的扩展，例如，将WordNet英语同义词数据库转成Solr格式，详情参见 <code>https://issues.apache.org/jira/browse/LUCENE-2347</code> 。<br><a name="3xk2S"></a></p>
+<h3 id="把过滤器组合在一起"><a href="#把过滤器组合在一起" class="headerlink" title="把过滤器组合在一起"></a>把过滤器组合在一起</h3><p>在示例微博上使用这些过滤器，得到的文本分析结果如图6.10所示。<br />现在让我们回到Solr的分析表盘，查看之前尝试的查询是否能找到结果。在6.2.7节中，我们使用简单的text_general字段类型查询San Francisco drink cafe ipad，没有找到结果。换成text_microblog字段类型，该查询就能找到相关度很高的那条示例微博，如图6.11所示。<br />表6.6中查询词项现在能够与文本分析之后的示例微博词项相匹配了。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626420718325-901bcb84-339c-4dd3-a013-e93b61930902.png#height=490&id=yzzPc&margin=%5Bobject%20Object%5D&name=image.png&originHeight=490&originWidth=1230&originalType=binary&ratio=1&size=332014&status=done&style=none&width=1230" alt="image.png"><br />举例说明用途的这个查询看起来有点奇怪。关键在于了解，Solr提供了丰富的内置文本分析工具，为复杂文本处理提供了灵活的解决方案。最终目的是让用户无须考虑文本的语言差异，能够轻松地使用自然语言，通过搜索应用找到相关文档。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626420888211-a6ed03ea-b36c-4d33-b2f2-3c92572d19a9.png#height=1026&id=GpsPh&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1026&originWidth=1206&originalType=binary&ratio=1&size=468763&status=done&style=none&width=1206" alt="image.png"><br />如果你对微博文本分析感兴趣，想要使用text_microblog字段类型进行文本分析，可以使用随书代码中的ch6/schema.xml，将其配置到本地Solr服务器上。更新了schema.xml之后，重启Solr服务器，然后使用post.jar工具将tweet.xml文档提交给Solr服务器。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cd $SOLR_IN_ACTION/example-docs</span><br><span class="line">java -jar post.jar ch6/tweets.xml</span><br></pre></td></tr></table></figure>
+<p><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626421071369-2a0ae5b9-0553-452e-8019-33346ebc6f90.png#height=892&id=UIJrR&margin=%5Bobject%20Object%5D&name=image.png&originHeight=892&originWidth=1222&originalType=binary&ratio=1&size=486978&status=done&style=none&width=1222" alt="image.png"><br />输出结果如下所示：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Posting file tweets.xml to http://localhost:8983/solr/collection1/update</span><br><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">response</span>&gt;</span></span><br><span class="line"> &lt;1st name=&quot;responseHeader&quot;&gt;</span><br><span class="line">   <span class="tag">&lt;<span class="name">int</span> <span class="attr">name</span>=<span class="string">&quot;status&quot;</span>&gt;</span>0<span class="tag">&lt;/<span class="name">int</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">int</span> <span class="attr">name</span>=<span class="string">&quot;QTime&quot;</span>&gt;</span>140<span class="tag">&lt;/<span class="name">int</span>&gt;</span></span><br><span class="line">  &lt;/1st&gt;</span><br><span class="line"> <span class="tag">&lt;/<span class="name">response</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">response</span>&gt;</span></span><br><span class="line"> &lt;1st name=&quot;responseHeader&quot;&gt;</span><br><span class="line">   <span class="tag">&lt;<span class="name">int</span> <span class="attr">name</span>=<span class="string">&quot;status&quot;</span>&gt;</span>0<span class="tag">&lt;/<span class="name">int</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;<span class="name">int</span> <span class="attr">name</span>=<span class="string">&quot;QTime&quot;</span>&gt;</span>67<span class="tag">&lt;/<span class="name">int</span>&gt;</span></span><br><span class="line">  &lt;/1st&gt;</span><br><span class="line"> <span class="tag">&lt;/<span class="name">response</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<p>对文档进行搜索之后，你可以搜索catch_all:@thelabdude，以确认这些微博例子是可以被搜索到的。请随意尝试各种查询，看看Solr怎么做文本分析。接下来介绍一些高级文本分析主题。<br><a name="zw0WF"></a></p>
+<h2 id="高级文本分析"><a href="#高级文本分析" class="headerlink" title="高级文本分析"></a>高级文本分析</h2><p>截止目前，我们对复杂社交媒体文本进行的分析没有编写一行代码。我们介绍了Solr提供的主要功能，但实际上只涉及了最常用的工具。在结束本章之前，我们介绍了Solr提供的主要功能，但实际上只涉及了最常用的工具。在结束本章之前，我们打算简要介绍一下用于文本分析微调的高级文本分析技术，具体内容如下：</p>
+<ul>
+<li><strong>schema.xml中文本字段的高级选项</strong></li>
+<li><strong>各语种的文本分析</strong></li>
+<li><strong>使用Solr插件框架扩展文本分析</strong></li>
+</ul>
+<p>首先介绍schema.xml中文本字段的更多高级属性。<br><a name="eeLqA"></a></p>
+<h3 id="高级字段属性"><a href="#高级字段属性" class="headerlink" title="高级字段属性"></a>高级字段属性</h3><p>表6.7列出了<field>元素可以设置的高级属性及其作用的简要说明。我们认为要重视这些选项，因为在查看Solr示例schema.xml时一定会遇到它们。还有一点需要注意，<strong>每个高级属性只能用于文本字段，对非文本字段(如日期和字符串)无效</strong>。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626421805652-5be38466-097d-4b1d-8d47-7fef1ea6399d.png#height=694&id=XT9eu&margin=%5Bobject%20Object%5D&name=image.png&originHeight=694&originWidth=1250&originalType=binary&ratio=1&size=498886&status=done&style=none&width=1250" alt="image.png"><br><a name="fseVD"></a></p>
+<h4 id="忽略字段规范化"><a href="#忽略字段规范化" class="headerlink" title="忽略字段规范化"></a>忽略字段规范化</h4><p>让我们仔细看一下可选的omitNorms属性，这是Solr初学者常见的一个疑惑。正如我们在地章中讨论的，**规范是基于文档长度规范、文档权重及字段权重三者的浮点值(lang.Float)**。底层的Lucene将这个浮点值编码为单字节，细想一下，这样做很酷。文档长度规范化用来提升短文档权重。在不涉及太多细节的前提下，相对于长文档，Lucene会略微提升短文档的权重，以改进相关度评分。从理论上讲，如果一个查询词项匹配到短文档和长文档各一篇，两篇都包含once一词，那么与长文档相比，匹配的词项在短文档中权重更重，所以Lucene认为短文档比长文档更相关一些。在这种情况下，词项权重的计算时词项频次（1）除以文档的词项总数（N）。短文档包含10个词项，其权重为0.10；长文档包含1000个词项，其权重为0.001。因此，Lucene略微提升短文档排位，对应地以规范形式编码。<br />按照这个道理，如果文档的长度相似，而且没有在索引阶段使用字段提升和文档提升，那么可以在搜索时设置 <code>omitNorms=&quot;true&quot;</code> ，以节省内存。刚开始时，我们建议使用默认值 <code>omitNorms=&quot;false&quot;</code> 。这样做的话，文档长度规范化可以优化搜索结果排名。接下来看另一个高级字段属性，用于提升文档相似度的计算性能。<br><a name="ARA4S"></a></p>
+<h4 id="词向量"><a href="#词向量" class="headerlink" title="词向量"></a>词向量</h4><p>第三章介绍过，<strong>Solr使用词向量计算文档与查询之间的相似度</strong>。Solr还提供文档之间的相似度计算功能，通常称为“更多类似结果”。Solr的这个功能可以在索引中查找与指定文档非常相似的文档。实质上，<strong>“更多类似结果”功能使用了文档的词向量来计算相似度</strong>。<strong>任意文档的词向量可以在查询阶段使用索引中存储的信息进行计算</strong>。为达到更好的性能，词向量可以在索引时预先计算和存储下来。<br /><strong>利用 <strong><code>**termVectors**</code></strong> 可选属性可以设置每个词向量在索引时存储</strong>。因此，如果你打算在搜索应用中大量使用“更多类似结果”功能的话，则应为文本字段设置 <code>termVectors=&quot;true&quot;</code> 。在某些情况下，词向量还可以提升搜索结果高亮功能的速度，有关搜索结果高亮详见第九章。如果在文档索引之后启用词向量，则需重新索引搜索文档。<br />书中其他内容涉及这些属性时再做具体介绍。举例来说，在第九章讨论搜索结果高亮时，我们会介绍termPositions和termOffsets属性。现在，让我们把注意力转到另一个高级文本分析主题：多语种分析和语种检测。<br><a name="mbGOB"></a></p>
+<h3 id="各语种文本分析"><a href="#各语种文本分析" class="headerlink" title="各语种文本分析"></a>各语种文本分析</h3><p>本章讨论的主要是英文文本分析。实际上，你选择的文本分析方案是服务于特定语言的。英文微博内容的文本分析方案并不适用于德语或法语内容。每种语言都有各自的分词规则、停用词列表和词干提取规则。一般来说，你需要为索引分析中的每种语言设计一个专门的<fieldType>字段。因此，你在本章中学到的许多技术就能排上用场了，它们仍然适用于英文之外的语言分析。<br />如何在索引时选择正确的文本分析器呢？假设你要索引的所有的文档，不考虑索引中的不同语种情况，一种简单的做法是，<strong>为每个语种分别使用一个唯一字段</strong>。假设要在微博搜索应用中索引法语微博，我们定义以下字段：</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">field</span> <span class="attr">name</span>=<span class="string">&quot;text_fr&quot;</span> <span class="attr">type</span>=<span class="string">&quot;text_microblog_fr&quot;</span></span></span><br><span class="line"><span class="tag">       <span class="attr">indexed</span>=<span class="string">&quot;true&quot;</span> <span class="attr">stored</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>从这个字段定义可以看出，该字段类型是text_microblog_fr，可以分析法语微博。懂法语的读者可以把text_microblog_fr字段类型定义作为一个练习。Solr提供了一个现成的法语分析字段类型text_fr，如代码清单6.5所示。它可以进行基础的法语文本分析，我们直接以它的使用为例。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626660495028-34d180c8-d036-4644-9ce7-6fc3b94e88f2.png#height=472&id=w9A0S&margin=%5Bobject%20Object%5D&name=image.png&originHeight=472&originWidth=1196&originalType=binary&ratio=1&size=319109&status=done&style=none&width=1196" alt="image.png"><br />有关text_fr字段类型需要注意以下几点：</p>
+<ul>
+<li><strong>由于StandardTokenizer适用于拉丁语系的大多数语言，所以这里使用它进行分析，但是如果你想保留主题标签和提及符号，那么需要使用WhitspaceTokenizer。</strong></li>
+<li><strong>从lang/stopwords_fr.txt文件中加载自定义的停用词。</strong></li>
+<li><strong>对法语微博使用法语专用词干提取器FrenchLightStemFilterFactory，因为每种语言的词干提取规则各不相同。</strong></li>
+</ul>
+<p>法语微博的文本分析以及有了单独的字段和字段类型，接下来需要在索引时使用它。如果已经知道文档语种时法语，在索引文档时就可以手动配置text_fr字段。举例来说，下面这条微博援引了伏尔泰的一句经典名言：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Le vrai philosophe n&#x27; attend rien des hommes, et il leur fait tout le bien dont il est capable</span><br><span class="line">																																				-伏尔泰</span><br></pre></td></tr></table></figure>
+<p>代码清单6.6是Solr索引了这条法语微博的XML文档内容。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626662434467-248351a3-4e78-42bc-a5dd-55bd00d0b060.png#height=466&id=nDi2A&margin=%5Bobject%20Object%5D&name=image.png&originHeight=466&originWidth=1206&originalType=binary&ratio=1&size=288338&status=done&style=none&width=1206" alt="image.png"><br />这里将该字段的语种设置为fr并明确text_fr字段类型。如果已经知道文本是法语，这种方法没问题。但是如果事先不清楚文本的语种，那该如何处理？此外，如果内容包含多种语言，要对其进行多语种搜索又该如何处理？第十四章将介绍多语种搜索，深入探讨Solr的多语种分析功能，包括语种检测、特定语种分词、词干提取、字符处理以及多语种内容混合的处理策略。<br><a name="YKxKO"></a></p>
+<h3 id="使用Solr插件扩展文本分析"><a href="#使用Solr插件扩展文本分析" class="headerlink" title="使用Solr插件扩展文本分析"></a>使用Solr插件扩展文本分析</h3><p>如果Solr的内置工具无法解决你的文本分析问题，那该怎么办？本章以此问题作为首位。正如你在本章中所看到的，我们仅使用了Solr的内置工具，没有编写任何代码就实现了强大的实力为内容转换处理。因此，很少会遇到Solr内置工具无法解决的文本分析需求，即便遇到，Solr的插件框架可用于构建应用专属分析组件。<br />首先，我们需要找到一个Solr内置工具无法解决的需求。第五章讨论过多值字段，links字段中索引了零个或多个URL。微博文本中的所有链接都简化为在线服务商bitly.com提供的短网址。例如，Solr主页网址（<a target="_blank" rel="noopener" href="http://lucene.apache.org/solr/%EF%BC%89%E5%AF%B9%E5%BA%94%E7%9A%84bit.ly%E7%9F%AD%E7%BD%91%E5%9D%80%E4%B8%BA">http://lucene.apache.org/solr/）对应的bit.ly短网址为</a> <code>http://bit.ly/3ynriE</code> 。从搜索的角度来看，短网址没有什么用，无法想象会有人在搜索框里输入 <code>bit.ly/3ynriE</code> 。<strong>当搜索URL时，找到的文档包含这个URL对应的短网址</strong>。也就是说，搜索 <code>lucene.apache.org/solr</code> 会找到包含 <code>http://bit.ly/3ynriE</code> 的微博。因此，<strong>在索引时我们需要提取短网址，将其替换为对应的完整网站</strong>。为获取完整的URL，我们使用Http的Head请求，通过重定向找到完整的URL。bit.ly短网址可以使用它的Web Service API。<br />好了，清楚了要解决的问题是什么，对问题的解决思路也有了基本认识。接下来需要确定在Solr文本分析过程的哪个阶段插入我们的解决办法。我们需要确定构建的插件类型。在6.2节中我们了解到，<strong>Solr文本分析包括以下组件：分析器（Analyzer）、字符过滤器（CharFilter）、分词器（Tokenizer）与分词过滤器（TokenFilter）</strong>。分析器将分词器和分词过滤器链组合成一个组件。我们不希望因为解决一个URL问题而替换掉整个分析器，而是希望利用已有的分词器和过滤器链。<strong>分词器将文本解析为词元流</strong>。<strong>分词过滤器对分词单元进行转换、替换或移除操作</strong>。除非有必要，否则不需要重新定义分词器。<br />我们的解决方案只涉及使用完整URL替换短网址这个分词单元。因此，针对这个需求，自定义一个分词过滤器，这是Solr中最常用和最简单的文本分析定制方法。也就是说，你可以通过类似的处理方法来构建自己的分析器、分词器或字符过滤器。<br /><strong>要创建自定义的分词过滤器，你需要编写两个具体的Java类</strong>：<strong>一个类扩展自Lucene的org.apache.lucene.analysis.util.TokenFilterFactory类</strong>。这个工厂类是必须的，有了它Solr才能根据schema.xml文件提供的配置对这个过滤器进行实例化。<br><a name="TZUgJ"></a></p>
+<h4 id="自定义TokenFilter类"><a href="#自定义TokenFilter类" class="headerlink" title="自定义TokenFilter类"></a>自定义TokenFilter类</h4><p>首先自定义一个TokenFIlter。这里主要关注文本分析的自定义过程，URL解析的具体实现细节留给有兴趣的读者。代码清单6.7给出了短网址解析的自定义分词过滤器类的代码框架。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626664881210-78a8feb3-97fc-40b5-8b2c-80d0afdedba4.png#height=792&id=d9Ejn&margin=%5Bobject%20Object%5D&name=image.png&originHeight=792&originWidth=1224&originalType=binary&ratio=1&size=457814&status=done&style=none&width=1224" alt="image.png"><br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626664914736-dc8d59f6-d723-4fda-8fa2-36c21b5a544c.png#height=512&id=DXIgB&margin=%5Bobject%20Object%5D&name=image.png&originHeight=512&originWidth=1190&originalType=binary&ratio=1&size=221769&status=done&style=none&width=1190" alt="image.png"><br />如果选择此过滤器方案，我们建议你考虑此方案对索引性能的影响。如果大量文档需要索引，比如说社交媒体内容量就很大，那么实施方案需要解决网址解析带来的高延迟。一种初步的解决方案是使用分布式缓存，如memcached，以避免多次解析网址，并充分利用短网址服务商如bitly.com提供的Web Service API。通常，API方式允许在单个请求中对多个短网址进行批处理，这比使用Http Head请求重定向来解析网址的办法更有效。<br><a name="4GIW4"></a></p>
+<h4 id="自定义TokenFilter类-1"><a href="#自定义TokenFilter类-1" class="headerlink" title="自定义TokenFilter类"></a>自定义TokenFilter类</h4><p>为Solr开发自定义TokenFilter，还需要编写一个工厂类，实现TokenFilter的实例化。此工厂类负责接收schema.xml中指定的属性，并将它们转换成TokenFilter创建所需的参数。schema.xml中分词过滤器的定义方法如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">filter</span> <span class="attr">class</span>=<span class="string">&quot;sia.ch6.ResolveUrlTokenFilterFactory&quot;</span></span></span><br><span class="line"><span class="tag">        <span class="attr">shortenedUrlPattern</span>=<span class="string">&quot;http:\/\/bit.ly\/[\w\-]+&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>此工厂类使用shortenedUrlPattern属性，为文本分析中的短网址匹配问题编译一个Java的Pattern对象。此处的例子只支持bit.ly网址，在实际应用中通过扩展正则表达式，以支持更多的短网址来源。<br />接下来，需要考虑在text_microblog字段类型的过滤链中哪个位置上放置此过滤器。在解决短网址问题之前无须对短网址进行任何转换。所以我们认为它应该紧跟WhitspaceTokenizer之后，在WordDelimiterFilter之前。这个工厂类的Java实现如代码清单6.8所示。<br /><img src="https://cdn.nlark.com/yuque/0/2021/png/2668706/1626683116805-a1e2d480-c5dd-43cb-922f-a43518cd358e.png#height=904&id=hZKsn&margin=%5Bobject%20Object%5D&name=image.png&originHeight=904&originWidth=1306&originalType=binary&ratio=1&size=522367&status=done&style=none&width=1306" alt="image.png"><br />仅需几行代码就自定义了一个TokenFilter！这段代码的核心是，Solr进行分文分析时，将此过滤器作为schema.xml的过滤器定义与自定义TokenFilter的配置示例两者之间的中介。<br />最后要将包含插件类的所有Jar文件放在Solr初始化时能够找到的位置。为简单起见，我们建议再新建一个plugins/目录，将此目录位置添加到solrconfig.xml中，具体做法参见第四章。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">lib</span> <span class="attr">dir</span>=<span class="string">&quot;plugins/&quot;</span> <span class="attr">regex</span>=<span class="string">&quot;.*\.jar&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+<p>启动Solr服务器，plugins目录中所有Jar文件都可以通过Solr的ClassLoader加载。如果Solr在初始化起见无法找到你的自定义类，请尝试使用plugins目录的完整路径。<br><a name="X7sni"></a></p>
+<h2 id="本章小结"><a href="#本章小结" class="headerlink" title="本章小结"></a>本章小结</h2><p>祝贺你！你已经掌握了一些难度较大的内容。至此，你应该已经系统化掌握了Solr的文本分析和索引过程。回顾一下，本章一开始介绍了通过字段类型定义来进行基础的文本分析。这让我们了解到，<strong>非结构化文本字段的字段类型可以在索引创建和查询处理两个阶段使用一个分析器，或分别使用两个独立的但相互兼容的分析器</strong>。每个分析器由一个分词器和分词过滤器链组成。为测试文本分析效果，我们通过Solr的分析表单，对示例微博使用StandardTokenizier和过滤器链，实现了停用词移除和小写转换。<br />测试结果表明，基础的文本分析不足以对示例微博内容分析的所有问题。因此，我们使用了Solr的其他一些内置工具来满足更复杂的需求。具体来说，我们使用PatternReplaceCharFilterFactory编写了一个简单的正则表达式，将词项中的重复字母如（yummm、sooon）减少到两个以内。我们使用WhitspaceTokenizer和WordDelimiterFilter保留了微博中的主题标签#号和提及符号@符号。WordDelimiter也被证明能够很好的处理连字符词项，例如，搜索iPad会匹配出包含i-Pad的文档。我们还学习了词干提取和同义词扩展方法，用以提升搜索引擎的匹配能力。总体来说，我们仅使用Solr的内置工具，没有编写一行代码，就实现了一个强大的微博文本分析方案。<br />本章最后介绍了一些高级文本分析主题。具体来说，我们介绍了字段的高级属性，例如，如果不需要再索引阶段提升权重或对字段进行规范化，设置omitNorms=”true”来减少索引对内存和存储空间的要求。随后，我们了解了Solr应对多语种的内置语种检测方法，更多详细内容请参见第十四章。最后，我们编写了一个自定义TokenFilter来解析短网址。本章想要传达的一个核心理念是，针对各类需求，在Solr中可以轻松地自定义分析器、分词器、分词过滤器及字符过滤器等。<br />在下一章中，我们将学习如何使用Solr查询和处理搜索结果。</p>
+ 
+      <!-- reward -->
+      
+    </div>
+    
+
+    <!-- copyright -->
+    
+    <div class="declare">
+      <ul class="post-copyright">
+        <li>
+          <i class="ri-copyright-line"></i>
+          <strong>Copyright： </strong>
+          
+          Copyright is owned by the author. For commercial reprints, please contact the author for authorization. For non-commercial reprints, please indicate the source.
+          
+        </li>
+      </ul>
+    </div>
+    
+    <footer class="article-footer">
+       
+<div class="share-btn">
+      <span class="share-sns share-outer">
+        <i class="ri-share-forward-line"></i>
+        分享
+      </span>
+      <div class="share-wrap">
+        <i class="arrow"></i>
+        <div class="share-icons">
+          
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="ri-weibo-fill"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="ri-wechat-fill"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="ri-qq-fill"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="ri-douban-line"></i>
+          </a>
+          <!-- <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a> -->
+          
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="ri-facebook-circle-fill"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="ri-twitter-fill"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="ri-google-fill"></i>
+          </a>
+        </div>
+      </div>
+</div>
+
+<div class="wx-share-modal">
+    <a class="modal-close" href="javascript:;"><i class="ri-close-circle-line"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://example.com/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E5%85%AD%E7%AB%A0-Solr%E6%96%87%E6%9C%AC%E5%88%86%E6%9E%90/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div id="share-mask"></div>  
+  <ul class="article-tag-list" itemprop="keywords"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr/" rel="tag">Solr</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/tags/Solr%E5%9F%BA%E7%A1%80/" rel="tag">Solr基础</a></li></ul>
+
+    </footer>
+  </div>
+
+   
+  <nav class="article-nav">
+    
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%B8%83%E7%AB%A0-Solr%E6%9F%A5%E8%AF%A2%E4%B8%8E%E6%90%9C%E7%B4%A2%E7%BB%93%E6%9E%9C/" class="article-nav-link">
+        <strong class="article-nav-caption">上一篇</strong>
+        <div class="article-nav-title">
+          
+            Solr手册-第七章 Solr查询与搜索结果
+          
+        </div>
+      </a>
+    
+    
+      <a href="/2021/10/31/Solr%E6%89%8B%E5%86%8C-%E7%AC%AC%E4%BA%94%E7%AB%A0-Solr%E7%B4%A2%E5%BC%95/" class="article-nav-link">
+        <strong class="article-nav-caption">下一篇</strong>
+        <div class="article-nav-title">Solr手册-第五章 Solr索引</div>
+      </a>
+    
+  </nav>
+
+  
+   
+     
+</article>
+
+</section>
+      <footer class="footer">
+  <div class="outer">
+    <ul>
+      <li>
+        Copyrights &copy;
+        2021
+        <i class="ri-heart-fill heart_icon"></i> John Doe
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      <li>
+        
+      </li>
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      
+    </ul>
+    <ul>
+      <li>
+        <!-- cnzz统计 -->
+        
+      </li>
+    </ul>
+  </div>
+</footer>    
+    </main>
+    <div class="float_btns">
+      <div class="totop" id="totop">
+  <i class="ri-arrow-up-line"></i>
+</div>
+
+<div class="todark" id="todark">
+  <i class="ri-moon-line"></i>
+</div>
+
+    </div>
+    <aside class="sidebar on">
+      <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/ayer-side.svg" alt="J`Han&#39;s Blog"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">HomePage</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">Document</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/Solr/">Solr</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/tags/">Tags</a>
+    </li>
+    
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      
+      <a class="nav-item-link nav-item-search"  title="Search">
+        <i class="ri-search-line"></i>
+      </a>
+      
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+    </aside>
+    <div id="mask"></div>
+
+<!-- #reward -->
+<div id="reward">
+  <span class="close"><i class="ri-close-line"></i></span>
+  <p class="reward-p"><i class="ri-cup-line"></i>如果觉得对您有帮助，来个打赏吧~</p>
+  <div class="reward-box">
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/alipay.jpg">
+      <span class="reward-type">支付宝</span>
+    </div>
+    
+    
+    <div class="reward-item">
+      <img class="reward-img" src="https://cdn.jsdelivr.net/gh/Shen-Yu/cdn/img/wechat.jpg">
+      <span class="reward-type">微信</span>
+    </div>
+    
+  </div>
+</div>
+    
+<script src="/js/jquery-3.6.0.min.js"></script>
+ 
+<script src="/js/lazyload.min.js"></script>
+
+<!-- Tocbot -->
+ 
+<script src="/js/tocbot.min.js"></script>
+
+<script>
+  tocbot.init({
+    tocSelector: ".tocbot",
+    contentSelector: ".article-entry",
+    headingSelector: "h1, h2, h3, h4, h5, h6",
+    hasInnerContainers: true,
+    scrollSmooth: true,
+    scrollContainer: "main",
+    positionFixedSelector: ".tocbot",
+    positionFixedClass: "is-position-fixed",
+    fixedSidebarOffset: "auto",
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.js"></script>
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/jquery-modal@0.9.2/jquery.modal.min.css"
+/>
+<script src="https://cdn.jsdelivr.net/npm/justifiedGallery@3.7.0/dist/js/jquery.justifiedGallery.min.js"></script>
+
+<script src="/dist/main.js"></script>
+
+<!-- ImageViewer -->
+ <!-- Root element of PhotoSwipe. Must have class pswp. -->
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    <!-- Background of PhotoSwipe. 
+         It's a separate element as animating opacity is faster than rgba(). -->
+    <div class="pswp__bg"></div>
+
+    <!-- Slides wrapper with overflow:hidden. -->
+    <div class="pswp__scroll-wrap">
+
+        <!-- Container that holds slides. 
+            PhotoSwipe keeps only 3 of them in the DOM to save memory.
+            Don't modify these 3 pswp__item elements, data is added later on. -->
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <!-- Default (PhotoSwipeUI_Default) interface on top of sliding area. Can be changed. -->
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                <!--  Controls are self-explanatory. Order can be changed. -->
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" style="display:none" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <!-- Preloader demo http://codepen.io/dimsemenov/pen/yyBWoR -->
+                <!-- element will get class pswp__preloader--active when preloader is running -->
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css">
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<script>
+    function viewer_init() {
+        let pswpElement = document.querySelectorAll('.pswp')[0];
+        let $imgArr = document.querySelectorAll(('.article-entry img:not(.reward-img)'))
+
+        $imgArr.forEach(($em, i) => {
+            $em.onclick = () => {
+                // slider展开状态
+                // todo: 这样不好，后面改成状态
+                if (document.querySelector('.left-col.show')) return
+                let items = []
+                $imgArr.forEach(($em2, i2) => {
+                    let img = $em2.getAttribute('data-idx', i2)
+                    let src = $em2.getAttribute('data-target') || $em2.getAttribute('src')
+                    let title = $em2.getAttribute('alt')
+                    // 获得原图尺寸
+                    const image = new Image()
+                    image.src = src
+                    items.push({
+                        src: src,
+                        w: image.width || $em2.width,
+                        h: image.height || $em2.height,
+                        title: title
+                    })
+                })
+                var gallery = new PhotoSwipe(pswpElement, PhotoSwipeUI_Default, items, {
+                    index: parseInt(i)
+                });
+                gallery.init()
+            }
+        })
+    }
+    viewer_init()
+</script> 
+<!-- MathJax -->
+
+<!-- Katex -->
+
+<!-- busuanzi  -->
+
+<!-- ClickLove -->
+
+<!-- ClickBoom1 -->
+
+<!-- ClickBoom2 -->
+
+<!-- CodeCopy -->
+ 
+<link rel="stylesheet" href="/css/clipboard.css">
+ <script src="https://cdn.jsdelivr.net/npm/clipboard@2/dist/clipboard.min.js"></script>
+<script>
+  function wait(callback, seconds) {
+    var timelag = null;
+    timelag = window.setTimeout(callback, seconds);
+  }
+  !function (e, t, a) {
+    var initCopyCode = function(){
+      var copyHtml = '';
+      copyHtml += '<button class="btn-copy" data-clipboard-snippet="">';
+      copyHtml += '<i class="ri-file-copy-2-line"></i><span>COPY</span>';
+      copyHtml += '</button>';
+      $(".highlight .code pre").before(copyHtml);
+      $(".article pre code").before(copyHtml);
+      var clipboard = new ClipboardJS('.btn-copy', {
+        target: function(trigger) {
+          return trigger.nextElementSibling;
+        }
+      });
+      clipboard.on('success', function(e) {
+        let $btn = $(e.trigger);
+        $btn.addClass('copied');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-checkbox-circle-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPIED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-checkbox-circle-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+      clipboard.on('error', function(e) {
+        e.clearSelection();
+        let $btn = $(e.trigger);
+        $btn.addClass('copy-failed');
+        let $icon = $($btn.find('i'));
+        $icon.removeClass('ri-file-copy-2-line');
+        $icon.addClass('ri-time-line');
+        let $span = $($btn.find('span'));
+        $span[0].innerText = 'COPY FAILED';
+        
+        wait(function () { // 等待两秒钟后恢复
+          $icon.removeClass('ri-time-line');
+          $icon.addClass('ri-file-copy-2-line');
+          $span[0].innerText = 'COPY';
+        }, 2000);
+      });
+    }
+    initCopyCode();
+  }(window, document);
+</script>
+ 
+<!-- CanvasBackground -->
+
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ theme: "forest" });
+  }
+</script>
+
+
+    
+    
+
+  </div>
+</body>
+
+</html>
