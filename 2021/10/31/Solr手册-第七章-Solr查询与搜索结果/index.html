@@ -106,16 +106,11 @@
     <div class="article-entry" itemprop="articleBody">
        
   <meta name="referrer" content="no-referrer"/>
-<a name="z7b4D"></a>
-# 序言
-本手册源自《Solr in action》，并修正了部分翻译和说辞，并引入了部分自身的理解，即基于原书进行了二次整理翻译，并不持有任何版权。<br />[《Solr in action》英文书籍链接(Original Book Link)](https://livebook.manning.com/book/solr-in-action/about-this-book/)<br />[《Solr in action》英文书籍版权归Manning出版社](https://www.manning.com/)<br />[《Solr in action》中文译版版权归电子工业出版社](https://www.phei.com.cn/)
-<a name="EYV54"></a>
-# 修整说明
-本篇文章于2021/10/31日上传GitHub，如遇版权问题请邮件`privatejhan@gmail.com`。<span id="more"></span>
-<a name="N3pon"></a>
-# 第二部分 Solr的核心功能
-接下来的6章将介绍Solr的核心功能，帮助你实现面向用户的强大搜索和发现体验。<br />搜索最重要的特征是为查询提供相关的搜索结果。在第七章中，**你将学习如何构造复杂的查询，如何对搜索结果排序和浏览结果，以及如何以各种格式返回搜索结果**。<br />关键词搜索是Solr的主要功能，除此之外，大多数搜素应用还需要其他功能来改善整体的用户体验。在第八章至第十一章中，我们将讨论Solr最常见的一些附加功能。<br />具体来说，我们将讨论：**分面**-用于搜索结果优化；**搜索结果高亮**-提供文本片段，显示匹配到的关键词的上下文信息；**拼写检查和自动建议**-帮助那些打字太快或拼写出错的用户修正查询；**字段折叠和结果分组**-去除多个类似结果，以体现结果文档的多样性。<br />如果第八章至第十一章的某些内容不适用于你的当前需要，在阅读时可以跳过它们。例如，搜索结果分组是许多搜索引擎的一个常见功能，加入你的数据不需要这个功能，就可以跳过第十一章，<br />最后，第十二章将深入介绍在生产环境中启用与扩容Solr时需要考虑的重要因素，提供了一份多年Solr实践的第一手经验总结。可扩展的搜索是Solr的DNA中不可或缺的一部分，这一张对Solr核心功能进行了充分总结。<br />
 
+<p><a name="z7b4D"></a></p>
+<h1 id="序言"><a href="#序言" class="headerlink" title="序言"></a>序言</h1><p>本手册源自《Solr in action》，并修正了部分翻译和说辞，并引入了部分自身的理解，即基于原书进行了二次整理翻译，并不持有任何版权。<br />[<br><a target="_blank" rel="noopener" href='https://livebook.manning.com/book/solr-in-action/about-this-book/'>《Solr in action》英文书籍链接(Original Book Link)</a><br /><br><a target="_blank" rel="noopener" href='https://www.manning.com/'>《Solr in action》英文书籍版权归Manning出版社</a><br /><br><a target="_blank" rel="noopener" href='https://www.phei.com.cn/'>《Solr in action》中文译版版权归电子工业出版社</a><br><a name="EYV54"></a></p>
+<h1 id="修整说明"><a href="#修整说明" class="headerlink" title="修整说明"></a>修整说明</h1><p>本篇文章于2021/10/31日上传GitHub，如遇版权问题请邮件<code>privatejhan@gmail.com</code>。<span id="more"></span><br><a name="N3pon"></a></p>
+<h1 id="第二部分-Solr的核心功能"><a href="#第二部分-Solr的核心功能" class="headerlink" title="第二部分 Solr的核心功能"></a>第二部分 Solr的核心功能</h1><p>接下来的6章将介绍Solr的核心功能，帮助你实现面向用户的强大搜索和发现体验。<br />搜索最重要的特征是为查询提供相关的搜索结果。在第七章中，<strong>你将学习如何构造复杂的查询，如何对搜索结果排序和浏览结果，以及如何以各种格式返回搜索结果</strong>。<br />关键词搜索是Solr的主要功能，除此之外，大多数搜素应用还需要其他功能来改善整体的用户体验。在第八章至第十一章中，我们将讨论Solr最常见的一些附加功能。<br />具体来说，我们将讨论：<strong>分面</strong>-用于搜索结果优化；<strong>搜索结果高亮</strong>-提供文本片段，显示匹配到的关键词的上下文信息；<strong>拼写检查和自动建议</strong>-帮助那些打字太快或拼写出错的用户修正查询；<strong>字段折叠和结果分组</strong>-去除多个类似结果，以体现结果文档的多样性。<br />如果第八章至第十一章的某些内容不适用于你的当前需要，在阅读时可以跳过它们。例如，搜索结果分组是许多搜索引擎的一个常见功能，加入你的数据不需要这个功能，就可以跳过第十一章，<br />最后，第十二章将深入介绍在生产环境中启用与扩容Solr时需要考虑的重要因素，提供了一份多年Solr实践的第一手经验总结。可扩展的搜索是Solr的DNA中不可或缺的一部分，这一张对Solr核心功能进行了充分总结。<br /></p>
 <p><a name="L81Y5"></a></p>
 <h1 id="Chapter-Seven-执行查询和处理搜索结果"><a href="#Chapter-Seven-执行查询和处理搜索结果" class="headerlink" title="Chapter Seven 执行查询和处理搜索结果"></a>Chapter Seven 执行查询和处理搜索结果</h1><p>本章要点</p>
 <ul>
